@@ -1,5 +1,6 @@
 import re
 import fitz  # PyMuPDF
+import PyPDF2
 import pandas as pd
 import os
 import calendar
@@ -114,7 +115,12 @@ def extract_info_from_pages(pdf_document):
         'valor_principal_tributo': [],
         'valor_multa_tributo': [],
         'valor_juros_tributo': [],
-        'valor_total_tributo': []
+        'valor_total_tributo': [],
+        'data_transmissao_dctfweb': [], 
+        'categoria_dcftweb': [],
+        'periodicidade_dctfweb': [],   
+        'periodo_apuracao_dctfweb': []
+        
     }
 
     page_patterns = {
@@ -149,7 +155,8 @@ def extract_info_from_pages(pdf_document):
         }
     }
 
-    codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2})"
+    #codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2})\s*-\s*(.+)"
+    codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2}\s*-\s*.*)(?=\nGrupo de Tributo|$)"
     data_vencimento_tributo_pattern = r"Data de Vencimento do Tributo/Quota\s*([\d/]+)"
     valor_principal_tributo_pattern = r"Principal\s*([\d.,]+)"
     valor_multa_tributo_pattern = r"Multa\s*([\d.,]+)"
@@ -160,11 +167,14 @@ def extract_info_from_pages(pdf_document):
     cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito\s*([\d./-]+)"
     debito_sucedida_pattern = r"Débito de Sucedida\s*\n*\s*([^\n]+)"
     debito_controlado_processo_pattern = r"Débito Controlado em Processo\s*([\w\s]+?)(?=\n|\.|$)"
-    periodo_apuracao_pattern = r"Período de Apuração \s*([\d/]+)"
-    periodicidade_pattern = r"Periodicidade\s*([\w\s]+?)(?=\n|\.|$)"
-    grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s]+?)(?=\n|\.|$)"
-    numero_recibo_dctfweb_pattern = r"Número do Recibo de Transmissão DCTFWeb \s*\n*([\d]{15,16})"
-
+    periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
+    periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
+    grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
+    numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
+    data_transmissao_dctfweb_pattern = r"\s*(\d{2}/\d{2}/\d{4})"
+    categoria_dcftweb_pattern = r"Geral"
+    periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
+    periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
 
     for page_num, patterns in page_patterns.items():
         if page_num < pdf_document.page_count:
@@ -228,6 +238,10 @@ def extract_info_from_pages(pdf_document):
         'periodicidade': periodicidade_pattern,
         'data_vencimento_tributo': data_vencimento_tributo_pattern,
         'numero_recibo_dctfweb': numero_recibo_dctfweb_pattern,
+        'data_transmissao_dctfweb': data_transmissao_dctfweb_pattern,
+        'categoria_dcftweb': categoria_dcftweb_pattern,
+        'periodicidade_dctfweb': periodicidade_dctfweb_pattern, 
+        'periodo_apuracao_dctfweb': periodo_apuracao_dctfweb_pattern,   
         'valor_principal_tributo': valor_principal_tributo_pattern,
         'valor_multa_tributo': valor_multa_tributo_pattern,
         'valor_juros_tributo': valor_juros_tributo_pattern,
@@ -238,6 +252,7 @@ def extract_info_from_pages(pdf_document):
         page_text_extra = pdf_document[page_num_extra].get_text()
         for key, pattern in patterns_pags_extras.items():
             matches_extra = re.findall(pattern, page_text_extra)
+            #matches_extra = re.findall(pattern, page_text_extra, re.DOTALL)
             if matches_extra:
                 for match_item in matches_extra:
                     info[key].append(match_item)
@@ -282,7 +297,7 @@ def process_pdfs_in_memory(uploaded_files):
         'tipo_perdcomp_retificacao', 'cod_perdcomp_retificacao', 'tipo_credito',
         'origem_credito_judicial', 'nome_responsavel_preenchimento', 'cod_cpf_preenchimento',
         'cod_per_origem', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida'
-        'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao'
+        'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao', 'data_transmissao_dctfweb', 'numero_recibo_dctfweb'
     ]
     for coluna in colunas_texto:
         if coluna in df.columns:
@@ -307,6 +322,10 @@ def explodir_tabela2(df_tabela2):
         'periodicidade',
         'data_vencimento_tributo',
         'numero_recibo_dctfweb',
+        'data_transmissao_dctfweb',
+        'categoria_dcftweb',
+        'periodicidade_dctfweb',
+        'periodo_apuracao_dctfweb',
         'valor_principal_tributo',
         'valor_multa_tributo',
         'valor_juros_tributo',
@@ -375,7 +394,6 @@ def main():
         df_result = process_pdfs_in_memory(uploaded_files)
 
         # Monta Tabela1 / Tabela2
-        # Monta Tabela1 / Tabela2
         tabela1_cols = [
             'cod_cnpj',
             'nome_cliente',
@@ -401,7 +419,6 @@ def main():
             'cod_perdcomp_cancelado',
             'Arquivo'
         ]
-
         tabela2_cols = [
             'cod_perdcomp',
             'cnpj_detentor_debito',
@@ -413,6 +430,10 @@ def main():
             'codigos_receita',
             'data_vencimento_tributo',
             'numero_recibo_dctfweb',
+            'data_transmissao_dctfweb',
+            'categoria_dcftweb',
+            'periodicidade_dctfweb',
+            'periodo_apuracao_dctfweb',
             'valor_principal_tributo',
             'valor_multa_tributo',
             'valor_juros_tributo',
@@ -422,33 +443,30 @@ def main():
         df_tabela1 = df_result[tabela1_cols].copy()
         df_tabela2 = df_result[tabela2_cols].copy()
 
-        # Explodir Tabela2 antes do merge
+        # Explodir Tabela2
         df_tabela2_explodida = explodir_tabela2(df_tabela2)
 
-        # Fazer o merge da Tabela 2 na Tabela 1
-        df_tabela_final = df_tabela1.merge(df_tabela2_explodida, on='cod_perdcomp', how='left')
-
-        # === Ajustes antes de exportar ===
-        # Dividir 'valor_compensado_dcomp' por 100
-        if 'valor_compensado_dcomp' in df_tabela_final.columns:
-            df_tabela_final['valor_compensado_dcomp'] = df_tabela_final['valor_compensado_dcomp'].apply(
+        # === AJUSTES REQUERIDOS ANTES DE EXPORTAR ===
+        # 1) Dividir 'valor_compensado_dcomp' por 100
+        if 'valor_compensado_dcomp' in df_tabela1.columns:
+            df_tabela1['valor_compensado_dcomp'] = df_tabela1['valor_compensado_dcomp'].apply(
                 lambda x: x / 100 if pd.notna(x) else x
             )
 
-        # Ajustar formatação dos valores monetários na Tabela 2 explodida
+        # 2) Substituir '.' por ',' nas colunas de tributos na Tabela2 explodida
         tributo_cols = ['valor_principal_tributo', 'valor_multa_tributo', 'valor_juros_tributo', 'valor_total_tributo']
         for col in tributo_cols:
             if col in df_tabela2_explodida.columns:
+                # Garantir que a coluna é string antes de replace, se não for string, converter
                 df_tabela2_explodida[col] = df_tabela2_explodida[col].astype(str).str.replace('.', ',', regex=False)
 
-        # Exibição das tabelas no Streamlit
-        st.subheader("Tabela Consolidada (Tabela1 + Tabela2)")
-        st.dataframe(df_tabela_final)
+        st.subheader("Tabela1 (Dados gerais da PER/DCOMP)")
+        st.dataframe(df_tabela1)
 
         st.subheader("Tabela2 (Detalhamento de Tributos Compensados da PER/DCOMP)")
         st.dataframe(df_tabela2_explodida)
 
-        # Criar nome do arquivo Excel
+        # Cria nome do arquivo Excel de acordo com a primeira palavra do nome_cliente
         nome_arquivo_excel = "extract_pdf_result.xlsx"
         if not df_tabela1.empty:
             nome_cliente = df_tabela1.iloc[0].get("nome_cliente", "")
@@ -457,7 +475,7 @@ def main():
                 nome_arquivo_excel = f"{nome_cliente}_Export_PERDCOMPs.xlsx"
 
         # Gerar Excel em memória
-        excel_bytes = gerar_excel_em_memoria(df_tabela_final, df_tabela2_explodida)
+        excel_bytes = gerar_excel_em_memoria(df_tabela1, df_tabela2_explodida)
 
         # Botão para download
         st.download_button(
@@ -466,7 +484,6 @@ def main():
             file_name=nome_arquivo_excel,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
 
     else:
         st.info("Por favor, faça o upload de um ou mais arquivos PDF.")
