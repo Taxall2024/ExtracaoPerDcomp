@@ -295,8 +295,9 @@ def process_pdfs_in_memory(uploaded_files):
     colunas_texto = [
         'tipo_perdcomp_retificacao', 'cod_perdcomp_retificacao', 'tipo_credito',
         'origem_credito_judicial', 'nome_responsavel_preenchimento', 'cod_cpf_preenchimento',
-        'cod_per_origem', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida'
-        'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao', 'data_transmissao_dctfweb', 'numero_recibo_dctfweb'
+        'cod_per_origem', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida',
+        'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao', 'data_transmissao_dctfweb', 'numero_recibo_dctfweb',
+        'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb'
     ]
     for coluna in colunas_texto:
         if coluna in df.columns:
@@ -310,7 +311,6 @@ def process_pdfs_in_memory(uploaded_files):
     return df
 
 def explodir_tabela2(df_tabela2):
-    import pandas as pd
     cols_explodir = [
         'cnpj_detentor_debito',
         'debito_sucedida',
@@ -352,6 +352,7 @@ def explodir_tabela2(df_tabela2):
                 else:
                     nova_linha[col] = ''
             linhas_expandidas.append(nova_linha)
+
     df_explodido = pd.DataFrame(linhas_expandidas)
     df_explodido = df_explodido[
         df_explodido["codigos_receita"].notna() &
@@ -359,16 +360,38 @@ def explodir_tabela2(df_tabela2):
     ]
     return df_explodido
 
-def gerar_excel_em_memoria(df1, df2):
+def gerar_excel_em_memoria(df1, df2, df_tabelona):
     import openpyxl
     from openpyxl import Workbook
     import io
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df1.to_excel(writer, sheet_name="Tabela1", index=False)
-        df2.to_excel(writer, sheet_name="Tabela2", index=False)
+        df_tabelona.to_excel(writer, sheet_name="Tabela Geral", index=False)
+        df1.to_excel(writer, sheet_name="Tabela PERDCOMP", index=False)
+        df2.to_excel(writer, sheet_name="Tabela Tributos", index=False) 
     output.seek(0)
     return output
+
+def criar_tabelona(df_tabela1, df_tabela2_explodida):
+    """
+    Converte múltiplas linhas da Tabela 2 em colunas numeradas e
+    mescla os dados com a Tabela 1 utilizando cod_perdcomp como chave.
+    """
+    tabela2_renomeada = df_tabela2_explodida.copy()
+    tabela2_renomeada["row_number"] = tabela2_renomeada.groupby("cod_perdcomp").cumcount() + 1
+
+    df_tabela2_pivot = tabela2_renomeada.pivot(index="cod_perdcomp", columns="row_number")
+    df_tabela2_pivot.columns = [f"{col}_{num}" for col, num in df_tabela2_pivot.columns]
+
+    # Ordenar as colunas anexadas por numeração crescente (_1, _2, _3, etc)
+    colunas_tabela2 = sorted(df_tabela2_pivot.columns, key=lambda x: int(x.split('_')[-1]))
+
+    #df_tabelona = df_tabela1.merge(df_tabela2_pivot, on="cod_perdcomp", how="left")
+    df_tabelona = df_tabela1.merge(df_tabela2_pivot[colunas_tabela2], on="cod_perdcomp", how="left")
+
+
+    return df_tabelona
+
 
 # -------------------------------------------------------
 # APLICAÇÃO STREAMLIT
@@ -442,27 +465,35 @@ def main():
         df_tabela1 = df_result[tabela1_cols].copy()
         df_tabela2 = df_result[tabela2_cols].copy()
 
-        # Explodir Tabela2
+      # Explodir Tabela2 (múltiplas linhas viram colunas numeradas)
         df_tabela2_explodida = explodir_tabela2(df_tabela2)
 
-        # === AJUSTES REQUERIDOS ANTES DE EXPORTAR ===
-        # 1) Dividir 'valor_compensado_dcomp' por 100
-        if 'valor_compensado_dcomp' in df_tabela1.columns:
-            df_tabela1['valor_compensado_dcomp'] = df_tabela1['valor_compensado_dcomp'].apply(
-                lambda x: x / 100 if pd.notna(x) else x
-            )
-
-        # 2) Substituir '.' por ',' nas colunas de tributos na Tabela2 explodida
+        #Substituir '.' por ',' nas colunas de tributos na Tabela2 explodida
         tributo_cols = ['valor_principal_tributo', 'valor_multa_tributo', 'valor_juros_tributo', 'valor_total_tributo']
         for col in tributo_cols:
             if col in df_tabela2_explodida.columns:
                 # Garantir que a coluna é string antes de replace, se não for string, converter
                 df_tabela2_explodida[col] = df_tabela2_explodida[col].astype(str).str.replace('.', ',', regex=False)
 
-        st.subheader("Tabela1 (Dados gerais da PER/DCOMP)")
+        # Criar Tabelona com as colunas numeradas corretamente
+        df_tabelona = criar_tabelona(df_tabela1, df_tabela2_explodida)
+
+        # Exibir Tabelona
+        st.subheader("Tabela Geral")
+        st.dataframe(df_tabelona)
+
+        # === AJUSTES REQUERIDOS ANTES DE EXPORTAR ===
+        # Dividir 'valor_compensado_dcomp' por 100
+        if 'valor_compensado_dcomp' in df_tabela1.columns:
+            df_tabela1['valor_compensado_dcomp'] = df_tabela1['valor_compensado_dcomp'].apply(
+                lambda x: x / 100 if pd.notna(x) else x
+            )
+
+
+        st.subheader("Tabela 1 (Dados das PER/DCOMP)")
         st.dataframe(df_tabela1)
 
-        st.subheader("Tabela2 (Detalhamento de Tributos Compensados da PER/DCOMP)")
+        st.subheader("Tabela 2 (Detalhamento de Tributos Compensados da PER/DCOMP)")
         st.dataframe(df_tabela2_explodida)
 
         # Cria nome do arquivo Excel de acordo com a primeira palavra do nome_cliente
@@ -474,7 +505,7 @@ def main():
                 nome_arquivo_excel = f"{nome_cliente}_Export_PERDCOMPs.xlsx"
 
         # Gerar Excel em memória
-        excel_bytes = gerar_excel_em_memoria(df_tabela1, df_tabela2_explodida)
+        excel_bytes = gerar_excel_em_memoria(df_tabela1, df_tabela2_explodida, df_tabelona)
 
         # Botão para download
         st.download_button(
