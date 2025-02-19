@@ -401,8 +401,9 @@ def main():
     st.write("""
     Faça upload dos PDFs de PER/DCOMP que deseja analisar.
     O sistema fará a raspagem de dados e exibirá em duas tabelas:
-    - Tabela1: dados gerais da PER/DCOMP
-    - Tabela2: códigos de receita e respectivos valores de tributos
+    - Tabela 1: dados gerais da PER/DCOMP
+    - Tabela 2: códigos de receita e respectivos valores de tributos
+    - Tabela Geral: junção da informação das tabaleas 1 e 2
     """)
 
     uploaded_files = st.file_uploader(
