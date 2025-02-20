@@ -118,7 +118,26 @@ def extract_info_from_pages(pdf_document):
         'data_transmissao_dctfweb': [], 
         'categoria_dcftweb': [],
         'periodicidade_dctfweb': [],   
-        'periodo_apuracao_dctfweb': []
+        'periodo_apuracao_dctfweb': [], 
+
+        'periodo_apuracao_origem_credito': None,
+        'cnpj_origem_credito': None,
+        'codigo_receita_origem_credito': None,
+        'grupo_tributo_credito_credito': None,  
+        'valor_principal_origem_credito': None,
+        'valor_multa_origem_credito': None,
+        'valor_juros_origem_credito': None,
+        'valor_total_origem_credito': None,
+
+        'periodo_apuracao_darf': None,
+        'cnpj_darf': None,
+        'codigo_receita_darf': None,
+        'data_vencimento_darf': None,
+        'data_arrecadacao_darf': None,
+        'valor_principal_darf': None,
+        'valor_multa_darf': None,
+        'valor_juros_darf': None,
+        'valor_total_darf': None,
         
     }
 
@@ -141,6 +160,8 @@ def extract_info_from_pages(pdf_document):
             'nome_responsavel_preenchimento': r"Nome\s+([\w\s]+)\s+CPF\s+(\d{3}\.\d{3}\.\d{3}-\d{2})",
             'cod_cpf_preenchimento': r"CPF \s*([\d./-]+)"
         },
+
+        
         2: {
             'cod_per_origem': r"N[º°] do PER/DCOMP Inicial\s*([\d.]+-[\d.]+)",
             'data_inicial_credito': r"Data Inicial do Período\s*([\d/]+)",
@@ -150,11 +171,30 @@ def extract_info_from_pages(pdf_document):
             'valor_saldo_original': r"Saldo do Crédito Original\s*([\d.,]+)",
             'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
             'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
-            'valor_credito_data_transmissao': r"\s*([\d.,]+)Crédito Original na Data da Entrega"
+            'valor_credito_data_transmissao': r"\s*([\d.,]+)Crédito Original na Data da Entrega",
+            
+            'periodo_apuracao_origem_credito': r"Período de Apuração\s*([\d/]+)\s",
+            'cnpj_origem_credito': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Código\s+da\s+Receita",
+            'codigo_receita_origem_credito': r"Código da Receita\s*(\d{4})",
+            'grupo_tributo_credito_credito': r"Grupo de Tributos*([\w\s]+)",
+            'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
+            'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
+            'valor_juros_origem_credito': r"Valor dos Juros\s*([\d.,]+)", 
+            'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
+
+            'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
+            'cnpj_darf': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Data\s+de\s+Vencimento",
+            'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
+            'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
+            'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
+            'valor_principal_darf': r"Data\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
+            'valor_multa_darf': r"Valor da Multa\s*([\d.,]+)", 
+            'valor_juros_darf': r"Valor dos Juros\s*([\d.,]+)", 
+            'valor_total_darf': r"Valor Total do DARF\s*([\d.,]+)",
+            
         }
     }
 
-    #codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2})\s*-\s*(.+)"
     codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2}\s*-\s*.*)(?=\nGrupo de Tributo|$)"
     data_vencimento_tributo_pattern = r"Data de Vencimento do Tributo/Quota\s*([\d/]+)"
     valor_principal_tributo_pattern = r"Principal\s*([\d.,]+)"
@@ -164,7 +204,7 @@ def extract_info_from_pages(pdf_document):
     valor_compensado_pattern = r"Total do Crédito Original Utilizado nesta DCOMP\s*([\d.,]+)"
     valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"
     cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito\s*([\d./-]+)"
-    debito_sucedida_pattern = r"Débito de Sucedida\s*\n*\s*([^\n]+)"
+    debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
     debito_controlado_processo_pattern = r"Débito Controlado em Processo\s*([\w\s]+?)(?=\n|\.|$)"
     periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
     periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
@@ -249,6 +289,7 @@ def extract_info_from_pages(pdf_document):
 
     for page_num_extra in range(3, pdf_document.page_count):
         page_text_extra = pdf_document[page_num_extra].get_text()
+        #print(f"Texto da página {page_num_extra}:\n{page_text_extra}\n")
         for key, pattern in patterns_pags_extras.items():
             matches_extra = re.findall(pattern, page_text_extra)
             #matches_extra = re.findall(pattern, page_text_extra, re.DOTALL)
@@ -282,6 +323,7 @@ def process_pdfs_in_memory(uploaded_files):
         'valor_juros_tributo',
         'valor_total_tributo'
     ]
+
     for col in cols_tributos_numericos:
         def converter_lista_de_numeros(item):
             if pd.isna(item) or not item:
@@ -328,7 +370,8 @@ def explodir_tabela2(df_tabela2):
         'valor_principal_tributo',
         'valor_multa_tributo',
         'valor_juros_tributo',
-        'valor_total_tributo'
+        'valor_total_tributo',
+        'periodo_apuracao_credito'
     ]
     linhas_expandidas = []
     for idx, row in df_tabela2.iterrows():
@@ -360,7 +403,7 @@ def explodir_tabela2(df_tabela2):
     ]
     return df_explodido
 
-def gerar_excel_em_memoria(df1, df2, df_tabelona):
+def gerar_excel_em_memoria(df1, df2, df_tabelona, df3, df4):
     import openpyxl
     from openpyxl import Workbook
     import io
@@ -368,7 +411,9 @@ def gerar_excel_em_memoria(df1, df2, df_tabelona):
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df_tabelona.to_excel(writer, sheet_name="Tabela Geral", index=False)
         df1.to_excel(writer, sheet_name="Tabela PERDCOMP", index=False)
-        df2.to_excel(writer, sheet_name="Tabela Tributos", index=False) 
+        df2.to_excel(writer, sheet_name="Tabela Tributos", index=False)
+        df3.to_excel(writer, sheet_name="Tabela Origem Créditos", index=False)
+        df4.to_excel(writer, sheet_name="Tabela DARF", index=False) 
     output.seek(0)
     return output
 
@@ -389,7 +434,6 @@ def criar_tabelona(df_tabela1, df_tabela2_explodida):
     #df_tabelona = df_tabela1.merge(df_tabela2_pivot, on="cod_perdcomp", how="left")
     df_tabelona = df_tabela1.merge(df_tabela2_pivot[colunas_tabela2], on="cod_perdcomp", how="left")
 
-
     return df_tabelona
 
 
@@ -399,11 +443,14 @@ def criar_tabelona(df_tabela1, df_tabela2_explodida):
 def main():
     st.title("Extração de Dados de PER/DCOMP (PDF)")
     st.write("""
-    Faça upload dos PDFs de PER/DCOMP que deseja analisar.
-    O sistema fará a raspagem de dados e exibirá em duas tabelas:
-    - Tabela 1: dados gerais da PER/DCOMP
+    Faça upload dos PDFs de PER/DCOMP que deseja analisar. 
+    O sistema fará a raspagem de dados e exibirá nas seguintes tabelas:
+    - Tabela Geral: visão unificada de todas as informações
+    - Tabela 1: dados gerais das PER/DCOMP
     - Tabela 2: códigos de receita e respectivos valores de tributos
-    - Tabela Geral: junção da informação das tabaleas 1 e 2
+    - Tabela 3: dados da origem dos créditos
+    - Tabela 4: dados das DARF pagos
+    
     """)
 
     uploaded_files = st.file_uploader(
@@ -463,8 +510,35 @@ def main():
             'valor_total_tributo'
         ]
 
+        tabela3_cols =[   
+            'cod_perdcomp',
+            'periodo_apuracao_origem_credito',
+            'cnpj_origem_credito',
+            'codigo_receita_origem_credito',
+            'grupo_tributo_credito_credito',
+            'valor_principal_origem_credito',
+            'valor_multa_origem_credito', 
+            'valor_juros_origem_credito',
+            'valor_total_origem_credito'
+            ]
+
+        tabela4_cols = [
+            'cod_perdcomp',
+            'periodo_apuracao_darf',
+            'cnpj_darf',
+            'codigo_receita_darf',
+            'data_vencimento_darf',
+            'data_arrecadacao_darf',
+            'valor_principal_darf',
+            'valor_multa_darf',
+            'valor_juros_darf',
+            'valor_total_darf'
+        ]
+
         df_tabela1 = df_result[tabela1_cols].copy()
         df_tabela2 = df_result[tabela2_cols].copy()
+        df_tabela3 = df_result[tabela3_cols].copy()
+        df_tabela4 = df_result[tabela4_cols].copy()
 
       # Explodir Tabela2 (múltiplas linhas viram colunas numeradas)
         df_tabela2_explodida = explodir_tabela2(df_tabela2)
@@ -479,23 +553,28 @@ def main():
         # Criar Tabelona com as colunas numeradas corretamente
         df_tabelona = criar_tabelona(df_tabela1, df_tabela2_explodida)
 
-        # Exibir Tabelona
-        st.subheader("Tabela Geral")
-        st.dataframe(df_tabelona)
-
-        # === AJUSTES REQUERIDOS ANTES DE EXPORTAR ===
         # Dividir 'valor_compensado_dcomp' por 100
         if 'valor_compensado_dcomp' in df_tabela1.columns:
             df_tabela1['valor_compensado_dcomp'] = df_tabela1['valor_compensado_dcomp'].apply(
                 lambda x: x / 100 if pd.notna(x) else x
             )
 
+         # Exibir Tabelona
+        st.subheader("Tabela Geral")
+        st.dataframe(df_tabelona)
 
-        st.subheader("Tabela 1 (Dados das PER/DCOMP)")
+        st.subheader("Tabela 1 - Dados das PER/DCOMP")
         st.dataframe(df_tabela1)
 
-        st.subheader("Tabela 2 (Detalhamento de Tributos Compensados da PER/DCOMP)")
+        st.subheader("Tabela 2 - Detalhamento de Tributos Compensados da PER/DCOMP")
         st.dataframe(df_tabela2_explodida)
+
+        st.subheader("Tabela 3 - Dados Origem do Créditos")
+        st.dataframe(df_tabela3)
+
+        st.subheader("Tabela 4 - Dados DARF Pagos")
+        st.dataframe(df_tabela4)
+
 
         # Cria nome do arquivo Excel de acordo com a primeira palavra do nome_cliente
         nome_arquivo_excel = "extract_pdf_result.xlsx"
@@ -506,7 +585,7 @@ def main():
                 nome_arquivo_excel = f"{nome_cliente}_Export_PERDCOMPs.xlsx"
 
         # Gerar Excel em memória
-        excel_bytes = gerar_excel_em_memoria(df_tabela1, df_tabela2_explodida, df_tabelona)
+        excel_bytes = gerar_excel_em_memoria( df_tabela1, df_tabela2_explodida, df_tabelona, df_tabela3, df_tabela4)
 
         # Botão para download
         st.download_button(
@@ -515,6 +594,8 @@ def main():
             file_name=nome_arquivo_excel,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+        #Adicionar botão para eliminar todos os arquivos carregados
 
     else:
         st.info("Por favor, faça o upload de um ou mais arquivos PDF.")
