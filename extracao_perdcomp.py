@@ -417,7 +417,7 @@ def gerar_excel_em_memoria(df1, df2, df_tabelona, df3, df4):
     output.seek(0)
     return output
 
-def criar_tabelona(df_tabela1, df_tabela2_explodida):
+def criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4):
     """
     Converte múltiplas linhas da Tabela 2 em colunas numeradas e
     mescla os dados com a Tabela 1 utilizando cod_perdcomp como chave.
@@ -433,6 +433,8 @@ def criar_tabelona(df_tabela1, df_tabela2_explodida):
 
     #df_tabelona = df_tabela1.merge(df_tabela2_pivot, on="cod_perdcomp", how="left")
     df_tabelona = df_tabela1.merge(df_tabela2_pivot[colunas_tabela2], on="cod_perdcomp", how="left")
+    df_tabelona = df_tabelona.merge(df_tabela3, on="cod_perdcomp", how="left") 
+    df_tabelona = df_tabelona.merge(df_tabela4, on="cod_perdcomp", how="left") 
 
     return df_tabelona
 
@@ -551,7 +553,7 @@ def main():
                 df_tabela2_explodida[col] = df_tabela2_explodida[col].astype(str).str.replace('.', ',', regex=False)
 
         # Criar Tabelona com as colunas numeradas corretamente
-        df_tabelona = criar_tabelona(df_tabela1, df_tabela2_explodida)
+        df_tabelona = criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4)
 
         # Dividir 'valor_compensado_dcomp' por 100
         if 'valor_compensado_dcomp' in df_tabela1.columns:
