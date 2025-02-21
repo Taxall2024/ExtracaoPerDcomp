@@ -95,7 +95,7 @@ def extract_info_from_pages(pdf_document):
         'data_inicial_credito': None,
         'data_final_credito': None,
         'data_competencia': None,
-        'valor_credito': None,
+        'valor_credito_saldo_negativo': None,
         'valor_credito_atualizado': None,
         'selic_acumulada': None,
         'valor_compensado_dcomp': None,
@@ -166,13 +166,14 @@ def extract_info_from_pages(pdf_document):
             'cod_per_origem': r"N[º°] do PER/DCOMP Inicial\s*([\d.]+-[\d.]+)",
             'data_inicial_credito': r"Data Inicial do Período\s*([\d/]+)",
             'data_final_credito': r"Data Final do Período\s*([\d/]+)",
-            'valor_credito': r"Valor do Saldo Negativo\s*([\d.,]+)",
+            'valor_credito_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
             'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
             'valor_saldo_original': r"Saldo do Crédito Original\s*([\d.,]+)",
             'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
             'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
             'valor_credito_data_transmissao': r"\s*([\d.,]+)Crédito Original na Data da Entrega",
             
+            #Origem do Crédito
             'periodo_apuracao_origem_credito': r"Período de Apuração\s*([\d/]+)\s",
             'cnpj_origem_credito': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Código\s+da\s+Receita",
             'codigo_receita_origem_credito': r"Código da Receita\s*(\d{4})",
@@ -182,6 +183,7 @@ def extract_info_from_pages(pdf_document):
             'valor_juros_origem_credito': r"Valor dos Juros\s*([\d.,]+)", 
             'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
 
+            #DARF
             'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
             'cnpj_darf': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Data\s+de\s+Vencimento",
             'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
@@ -314,8 +316,8 @@ def process_pdfs_in_memory(uploaded_files):
 
     df = pd.DataFrame(all_data)
 
-    df['valor_compensado_dcomp'] = df['valor_compensado_dcomp'].apply(extrair_valor_numerico)
-    df['valor_credito_data_transmissao'] = df['valor_credito_data_transmissao'].apply(extrair_valor_numerico)
+    #df['valor_compensado_dcomp'] = df['valor_compensado_dcomp'].apply(extrair_valor_numerico)
+    #df['valor_credito_data_transmissao'] = df['valor_credito_data_transmissao'].apply(extrair_valor_numerico)
 
     cols_tributos_numericos = [
         'valor_principal_tributo',
@@ -438,6 +440,21 @@ def criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4):
 
     return df_tabelona
 
+def limpar_tabelas_3_e_4(df_tabela3, df_tabela4):
+    """
+    Remove linhas das tabelas 3 e 4 onde apenas 'cod_perdcomp' existe e os demais dados são vazios.
+    """
+
+    # Remover da Tabela 3 quando só existe 'cod_perdcomp'
+    colunas_dados_tabela3 = [col for col in df_tabela3.columns if col != 'cod_perdcomp']
+    df_tabela3 = df_tabela3.dropna(subset=colunas_dados_tabela3, how='all')
+
+    # Remover da Tabela 4 quando só existe 'cod_perdcomp'
+    colunas_dados_tabela4 = [col for col in df_tabela4.columns if col != 'cod_perdcomp']
+    df_tabela4 = df_tabela4.dropna(subset=colunas_dados_tabela4, how='all')
+
+    return df_tabela3, df_tabela4
+
 
 # -------------------------------------------------------
 # APLICAÇÃO STREAMLIT
@@ -482,11 +499,11 @@ def main():
             'data_inicial_credito',
             'data_final_credito',
             'data_competencia',
-            'valor_credito',
-            'valor_credito_atualizado',
             'selic_acumulada',
-            'valor_compensado_dcomp',
+            'valor_credito_saldo_negativo',
             'valor_credito_data_transmissao',
+            'valor_credito_atualizado',
+            'valor_compensado_dcomp',
             'valor_saldo_original',
             'cod_perdcomp_cancelado',
             'Arquivo'
@@ -544,6 +561,7 @@ def main():
 
       # Explodir Tabela2 (múltiplas linhas viram colunas numeradas)
         df_tabela2_explodida = explodir_tabela2(df_tabela2)
+        df_tabela3, df_tabela4 = limpar_tabelas_3_e_4(df_tabela3, df_tabela4)
 
         #Substituir '.' por ',' nas colunas de tributos na Tabela2 explodida
         tributo_cols = ['valor_principal_tributo', 'valor_multa_tributo', 'valor_juros_tributo', 'valor_total_tributo']
