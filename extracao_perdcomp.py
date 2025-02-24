@@ -316,7 +316,7 @@ def process_pdfs_in_memory(uploaded_files):
 
     df = pd.DataFrame(all_data)
 
-    #df['valor_compensado_dcomp'] = df['valor_compensado_dcomp'].apply(extrair_valor_numerico)
+    df['valor_compensado_dcomp'] = df['valor_compensado_dcomp'].apply(extrair_valor_numerico)
     #df['valor_credito_data_transmissao'] = df['valor_credito_data_transmissao'].apply(extrair_valor_numerico)
 
     cols_tributos_numericos = [
@@ -607,15 +607,20 @@ def main():
         # Gerar Excel em memória
         excel_bytes = gerar_excel_em_memoria( df_tabela1, df_tabela2_explodida, df_tabelona, df_tabela3, df_tabela4)
 
-        # Botão para download
+       # Botão para download
         st.download_button(
             label="Baixar arquivo Excel",
             data=excel_bytes,
             file_name=nome_arquivo_excel,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    )
 
-        #Adicionar botão para eliminar todos os arquivos carregados
+    # #Botão para excluir todos os arquivos carregados
+    #     if st.button("Excluir todos os PDFs carregados"):
+    #         uploaded_files.clear()
+    #         st.success("Todos os PDFs foram excluídos com sucesso!")
+    #         st.rerun()  # Recarrega a página para refletir a remoção dos arquivos
+    #         #Adicionar botão para eliminar todos os arquivos carregados
 
     else:
         st.info("Por favor, faça o upload de um ou mais arquivos PDF.")
