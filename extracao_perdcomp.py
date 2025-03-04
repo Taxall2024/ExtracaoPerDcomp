@@ -75,7 +75,7 @@ def extrair_valor_numerico(texto, formatar_para_exibicao=False):
             return valor
         except ValueError:
             print(f"[ERRO] Não foi possível converter o texto '{texto}' para float.")
-    return 0
+    
 
 
 def extract_info_from_pages(pdf_document):
@@ -98,11 +98,13 @@ def extract_info_from_pages(pdf_document):
         'valor_saldo_negativo': None,
         'valor_credito_atualizado': None,
         'selic_acumulada': None,
-        'valor_total_debitos_dcomp': None,
-        'valor_total_credito_original_usado_dcomp': None,
+        'valor_original_credito_inicial': None,
+        'valor_total_debitos_deste_documento': None,
+        #'valor_total_credito_original_usado_dcomp': None,
+        'valor_total_credito_original_utilizado_documento': None,
         'valor_credito_original_data_entrega': None,
         'valor_pedido_restituicao': None,
-        'valor_saldo_original': None,
+        'valor_saldo_credito_original': None,
         'cod_perdcomp_cancelado': None,
         'total_parcelas_composicao_credito': None, 
         'imposto_devido': None,
@@ -127,7 +129,7 @@ def extract_info_from_pages(pdf_document):
         'periodo_apuracao_origem_credito': None,
         'cnpj_origem_credito': None,
         'codigo_receita_origem_credito': None,
-        'grupo_tributo_credito_credito': None,  
+        'grupo_tributo_origem_credito': None,  
         'valor_principal_origem_credito': None,
         'valor_multa_origem_credito': None,
         'valor_juros_origem_credito': None,
@@ -173,24 +175,26 @@ def extract_info_from_pages(pdf_document):
             'data_final_credito': r"Data Final do Período\s*([\d/]+)",
             'valor_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
             'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
-            'valor_saldo_original': r"Saldo do Crédito Original\s*([\d.,]+)",
+            'valor_saldo_credito_original': r"Saldo do Crédito Original\s*([\d.,]+)",
             'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
             'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
             'valor_credito_original_data_entrega': r"\s*([\d.,]+)Crédito Original na Data da Entrega",
             'total_parcelas_composicao_credito': r"Total das Parcelas de Composição do Crédito\s*([\d.,]+)",
+            'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
             'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
             'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
-            #'valor_total_debitos_dcomp':r"Total dos débitos desta DCOMP\s*(?:.*?\b(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\b){2}.*?\b(\d{1,3}(?:\.\d{3})*(?:,\d+)?\b", 
+            'valor_total_debitos_deste_documento':r"Total dos Débitos deste Documento\s*([\d.,]+)", 
+            'valor_total_credito_original_utilizado_documento': r"Total do Crédito Original Utilizado neste Documento\s*([\d.,]+)", 
             #'valor_total_debitos_dcomp': r"Total dos débitos desta DCOMP\s*(?:.*?\b(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\b)*\s*$",
             
             #Origem do Crédito
-            'periodo_apuracao_origem_credito': r"Período de Apuração\s*([\d/]+)\s",
-            'cnpj_origem_credito': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Código\s+da\s+Receita",
-            'codigo_receita_origem_credito': r"Código da Receita\s*(\d{4})",
-            'grupo_tributo_credito_credito': r"Grupo de Tributos*([\w\s]+)",
+            'periodo_apuracao_origem_credito': r"\s*([\d/]+)\sPeríodo de Apuração",
+            'cnpj_origem_credito': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ do Pagamento\s*([\d.\/-]+)\s+Código\s+da\s+Receita",
+            'codigo_receita_origem_credito': r"Código da Receita\s(\d{4})",
+            'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+)",
             'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
             'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
-            'valor_juros_origem_credito': r"Valor dos Juros\s*([\d.,]+)", 
+            'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
             'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
 
             #DARF
@@ -251,9 +255,9 @@ def extract_info_from_pages(pdf_document):
 
             # valor_compensado_dcomp
             match_compensado = re.search(valor_compensado_pattern, page_text)
-            if match_compensado:
-                info['valor_total_credito_original_usado_dcomp'] = match_compensado.group(1)
-                info['valor_total_credito_original_usado_dcomp'] = info['valor_total_credito_original_usado_dcomp'].replace('.', '').replace(',', '.')
+            #if match_compensado:
+                #info['valor_total_credito_original_usado_dcomp'] = match_compensado.group(1)
+                #info['valor_total_credito_original_usado_dcomp'] = info['valor_total_credito_original_usado_dcomp'].replace('.', '').replace(',', '.')
 
             # valor_credito_data_transmissao
             match_credito_transmissao = re.search(valor_credito_transmissao_pattern, page_text)
@@ -326,7 +330,7 @@ def process_pdfs_in_memory(uploaded_files):
 
     df = pd.DataFrame(all_data)
 
-    df['valor_total_credito_original_usado_dcomp'] = df['valor_total_credito_original_usado_dcomp'].apply(extrair_valor_numerico)
+    #df['valor_total_credito_original_usado_dcomp'] = df['valor_total_credito_original_usado_dcomp'].apply(extrair_valor_numerico)
     #df['valor_credito_data_transmissao'] = df['valor_credito_data_transmissao'].apply(extrair_valor_numerico)
 
     cols_tributos_numericos = [
@@ -334,7 +338,6 @@ def process_pdfs_in_memory(uploaded_files):
         'valor_multa_tributo',
         'valor_juros_tributo',
         'valor_total_tributo',
-        'valor_total_debitos_dcomp',
     ]
 
     for col in cols_tributos_numericos:
@@ -480,7 +483,10 @@ def main():
     - Tabela 2: códigos de receita e respectivos valores de tributos
     - Tabela 3: dados da origem dos créditos
     - Tabela 4: dados das DARF pagos
-    
+             
+    Tome cuidado ao utilizar os dados, pois a extração pode conter erros. 
+    Algumas das colunas podem vir vazias já que o pdf não contém a informação.
+    Se houver dúvidas, consulte o arquivo original.
     """)
 
     uploaded_files = st.file_uploader(
@@ -513,13 +519,15 @@ def main():
             'selic_acumulada',
             'imposto_devido', 
             'total_parcelas_composicao_credito',
+            'valor_original_credito_inicial',
             'valor_saldo_negativo',
             'valor_credito_original_data_entrega',
             'valor_pedido_restituicao',
             'valor_credito_atualizado',
-            'valor_total_debitos_dcomp',
-            'valor_total_credito_original_usado_dcomp',
-            'valor_saldo_original',
+            'valor_total_debitos_deste_documento',
+            #'valor_total_credito_original_usado_dcomp',
+            'valor_total_credito_original_utilizado_documento',
+            'valor_saldo_credito_original',
             'cod_perdcomp_cancelado',
             'Arquivo'
         ]
@@ -549,7 +557,7 @@ def main():
             'periodo_apuracao_origem_credito',
             'cnpj_origem_credito',
             'codigo_receita_origem_credito',
-            'grupo_tributo_credito_credito',
+            'grupo_tributo_origem_credito',
             'valor_principal_origem_credito',
             'valor_multa_origem_credito', 
             'valor_juros_origem_credito',
@@ -589,10 +597,10 @@ def main():
         df_tabelona = criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4)
 
         # Dividir 'valor_compensado_dcomp' por 100
-        if 'valor_total_credito_original_usado_dcomp' in df_tabela1.columns:
-            df_tabela1['valor_total_credito_original_usado_dcomp'] = df_tabela1['valor_total_credito_original_usado_dcomp'].apply(
-                lambda x: x / 100 if pd.notna(x) else x
-            )
+        #if 'valor_total_credito_original_usado_dcomp' in df_tabela1.columns:
+            #df_tabela1['valor_total_credito_original_usado_dcomp'] = df_tabela1['valor_total_credito_original_usado_dcomp'].apply(
+                #lambda x: x / 100 if pd.notna(x) else x
+            #)
 
          # Exibir Tabelona
         st.subheader("Tabela Geral")
