@@ -205,10 +205,10 @@ def extract_info_from_pages(pdf_document):
             'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)\s", 
             'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
             'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
-            'valor_principal_darf': r"Data\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
-            'valor_multa_darf': r"Valor da Multa\s*([\d.,]+)", 
-            'valor_juros_darf': r"Valor dos Juros\s*([\d.,]+)", 
-            'valor_total_darf': r"Valor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
+            'valor_principal_darf': r"DARF NUMERDADO*?\sData\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
+            'valor_multa_darf': r"DARF NUMERDADO*?\sValor da Multa\s*([\d.,]+)", 
+            'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
+            'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
             'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)"
         }
     }
@@ -219,7 +219,6 @@ def extract_info_from_pages(pdf_document):
     valor_multa_tributo_pattern = r"Multa\s*([\d.,]+)"
     valor_juros_tributo_pattern = r"Juros\s*([\d.,]+)"
     valor_total_tributo_pattern = r"Total\s*([\d.,]+)"
-    valor_compensado_pattern = r"Total do Crédito Original Utilizado nesta DCOMP\s*([\d.,]+)"
     valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"
     cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito\s*([\d./-]+)"
     debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
@@ -229,7 +228,7 @@ def extract_info_from_pages(pdf_document):
     grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
     numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
     data_transmissao_dctfweb_pattern = r"\s*(\d{2}/\d{2}/\d{4})"
-    categoria_dcftweb_pattern = r"Geral"
+    categoria_dcftweb_pattern = r"Geral\s"
     periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
     periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
 
@@ -306,10 +305,8 @@ def extract_info_from_pages(pdf_document):
 
     for page_num_extra in range(3, pdf_document.page_count):
         page_text_extra = pdf_document[page_num_extra].get_text()
-        #print(f"Texto da página {page_num_extra}:\n{page_text_extra}\n")
         for key, pattern in patterns_pags_extras.items():
             matches_extra = re.findall(pattern, page_text_extra)
-            #matches_extra = re.findall(pattern, page_text_extra, re.DOTALL)
             if matches_extra:
                 for match_item in matches_extra:
                     info[key].append(match_item)
@@ -369,6 +366,7 @@ def process_pdfs_in_memory(uploaded_files):
 
     return df
 
+
 def explodir_tabela2(df_tabela2):
     cols_explodir = [
         'cnpj_detentor_debito',
@@ -388,8 +386,8 @@ def explodir_tabela2(df_tabela2):
         'valor_multa_tributo',
         'valor_juros_tributo',
         'valor_total_tributo',
-        #'periodo_apuracao_origem_credito'
     ]
+    
     linhas_expandidas = []
     for idx, row in df_tabela2.iterrows():
         splitted = {}
@@ -588,6 +586,7 @@ def main():
 
       # Explodir Tabela2 (múltiplas linhas viram colunas numeradas)
         df_tabela2_explodida = explodir_tabela2(df_tabela2)
+        
         df_tabela3, df_tabela4 = limpar_tabelas_3_e_4(df_tabela3, df_tabela4)
 
         #Substituir '.' por ',' nas colunas de tributos na Tabela2 explodida
@@ -641,13 +640,6 @@ def main():
             file_name=nome_arquivo_excel,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-    # #Botão para excluir todos os arquivos carregados
-    #     if st.button("Excluir todos os PDFs carregados"):
-    #         uploaded_files.clear()
-    #         st.success("Todos os PDFs foram excluídos com sucesso!")
-    #         st.rerun()  # Recarrega a página para refletir a remoção dos arquivos
-    #         #Adicionar botão para eliminar todos os arquivos carregados
 
     else:
         st.info("Por favor, faça o upload de um ou mais arquivos PDF.")
