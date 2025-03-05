@@ -138,12 +138,14 @@ def extract_info_from_pages(pdf_document):
         'periodo_apuracao_darf': None,
         'cnpj_darf': None,
         'codigo_receita_darf': None,
+        'numero_documento_arrecadacao': None,
         'data_vencimento_darf': None,
         'data_arrecadacao_darf': None,
         'valor_principal_darf': None,
         'valor_multa_darf': None,
         'valor_juros_darf': None,
         'valor_total_darf': None,
+        'valor_original_credito_darf': None,
         
     }
 
@@ -185,13 +187,12 @@ def extract_info_from_pages(pdf_document):
             'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
             'valor_total_debitos_deste_documento':r"Total dos Débitos deste Documento\s*([\d.,]+)", 
             'valor_total_credito_original_utilizado_documento': r"Total do Crédito Original Utilizado neste Documento\s*([\d.,]+)", 
-            #'valor_total_debitos_dcomp': r"Total dos débitos desta DCOMP\s*(?:.*?\b(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\b)*\s*$",
             
             #Origem do Crédito
-            'periodo_apuracao_origem_credito': r"\s*([\d/]+)\sPeríodo de Apuração",
-            'cnpj_origem_credito': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ do Pagamento\s*([\d.\/-]+)\s+Código\s+da\s+Receita",
+            'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
+            'cnpj_origem_credito': r"\s([\d.\/-]+)\sCNPJ do Pagamento\s", 
             'codigo_receita_origem_credito': r"Código da Receita\s(\d{4})",
-            'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+)",
+            'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
             'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
             'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
             'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
@@ -199,15 +200,16 @@ def extract_info_from_pages(pdf_document):
 
             #DARF
             'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
-            'cnpj_darf': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Data\s+de\s+Vencimento",
+            'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s", 
             'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
+            'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)\s", 
             'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
             'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
             'valor_principal_darf': r"Data\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
             'valor_multa_darf': r"Valor da Multa\s*([\d.,]+)", 
             'valor_juros_darf': r"Valor dos Juros\s*([\d.,]+)", 
-            'valor_total_darf': r"Valor Total do DARF\s*([\d.,]+)",
-            
+            'valor_total_darf': r"Valor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
+            'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)"
         }
     }
 
@@ -253,8 +255,7 @@ def extract_info_from_pages(pdf_document):
                     elif key not in ['nome_responsavel_preenchimento', 'cod_cpf_preenchimento']:
                         info[key] = matches[0].strip()
 
-            # valor_compensado_dcomp
-            match_compensado = re.search(valor_compensado_pattern, page_text)
+            #match_compensado = re.search(valor_compensado_pattern, page_text)
             #if match_compensado:
                 #info['valor_total_credito_original_usado_dcomp'] = match_compensado.group(1)
                 #info['valor_total_credito_original_usado_dcomp'] = info['valor_total_credito_original_usado_dcomp'].replace('.', '').replace(',', '.')
@@ -387,7 +388,7 @@ def explodir_tabela2(df_tabela2):
         'valor_multa_tributo',
         'valor_juros_tributo',
         'valor_total_tributo',
-        'periodo_apuracao_credito'
+        #'periodo_apuracao_origem_credito'
     ]
     linhas_expandidas = []
     for idx, row in df_tabela2.iterrows():
@@ -569,12 +570,15 @@ def main():
             'periodo_apuracao_darf',
             'cnpj_darf',
             'codigo_receita_darf',
+            'numero_documento_arrecadacao',
             'data_vencimento_darf',
             'data_arrecadacao_darf',
             'valor_principal_darf',
             'valor_multa_darf',
             'valor_juros_darf',
-            'valor_total_darf'
+            'valor_total_darf',
+            'valor_original_credito_darf'
+
         ]
 
         df_tabela1 = df_result[tabela1_cols].copy()
