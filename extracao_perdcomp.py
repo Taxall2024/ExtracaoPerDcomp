@@ -98,10 +98,12 @@ def extract_info_from_pages(pdf_document):
         'valor_saldo_negativo': None,
         'valor_credito_atualizado': None,
         'selic_acumulada': None,
+        'csll_devida': None,
         'valor_original_credito_inicial': None,
         'valor_total_debitos_deste_documento': None,
-        #'valor_total_credito_original_usado_dcomp': None,
         'valor_total_credito_original_utilizado_documento': None,
+        'valor_total_debitos_desta_dcomp': None,
+        'valor_total_credito_original_usado_dcomp': None,
         'valor_credito_original_data_entrega': None,
         'valor_pedido_restituicao': None,
         'valor_saldo_credito_original': None,
@@ -186,8 +188,11 @@ def extract_info_from_pages(pdf_document):
             'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
             'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
             'valor_total_debitos_deste_documento':r"Total dos Débitos deste Documento\s*([\d.,]+)", 
-            'valor_total_credito_original_utilizado_documento': r"Total do Crédito Original Utilizado neste Documento\s*([\d.,]+)", 
-            
+            'valor_total_credito_original_utilizado_documento': r"Total do Crédito Original Utilizado neste Documento\s*([\d.,]+)",
+            'valor_total_debitos_desta_dcomp': r"Total dos Débitos desta DCOMP\s*([\d.,]+)", 
+            'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original Utilizado nesta DCOMP\s*([\d.,]+)",
+            'csll_devida': r"\s*CSLL Devida\s([\d.,]+)\s*",
+
             #Origem do Crédito
             'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
             'cnpj_origem_credito': r"\s([\d.\/-]+)\sCNPJ do Pagamento\s", 
@@ -328,9 +333,6 @@ def process_pdfs_in_memory(uploaded_files):
 
     df = pd.DataFrame(all_data)
 
-    #df['valor_total_credito_original_usado_dcomp'] = df['valor_total_credito_original_usado_dcomp'].apply(extrair_valor_numerico)
-    #df['valor_credito_data_transmissao'] = df['valor_credito_data_transmissao'].apply(extrair_valor_numerico)
-
     cols_tributos_numericos = [
         'valor_principal_tributo',
         'valor_multa_tributo',
@@ -353,7 +355,7 @@ def process_pdfs_in_memory(uploaded_files):
         'origem_credito_judicial', 'nome_responsavel_preenchimento', 'cod_cpf_preenchimento',
         'cod_per_origem', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida',
         'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao', 'data_transmissao_dctfweb', 'numero_recibo_dctfweb',
-        'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb'
+        'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb', 
     ]
     for coluna in colunas_texto:
         if coluna in df.columns:
@@ -555,6 +557,7 @@ def main():
             'data_competencia',
             'selic_acumulada',
             'imposto_devido', 
+            'csll_devida',
             'total_parcelas_composicao_credito',
             'valor_original_credito_inicial',
             'valor_saldo_negativo',
@@ -562,7 +565,6 @@ def main():
             'valor_pedido_restituicao',
             'valor_credito_atualizado',
             'valor_total_debitos_deste_documento',
-            #'valor_total_credito_original_usado_dcomp',
             'valor_total_credito_original_utilizado_documento',
             'valor_saldo_credito_original',
             'cod_perdcomp_cancelado',
@@ -682,8 +684,8 @@ def main():
             df_txt = ler_arquivo_txt(uploaded_files_2, 'cod_perdcomp', 'situacao_perdcomp')
             
             if not df_txt.empty:
-                st.subheader("Dados do Arquivo TXT")
-                st.dataframe(df_txt)  # Exibir o DataFrame do TXT para verificação
+                #st.subheader("Dados do Arquivo TXT")
+                #st.dataframe(df_txt)  # Exibir o DataFrame do TXT para verificação
 
                 # Garantir que a coluna 'cod_perdcomp' em df_txt e df_tabela1 tenha o mesmo tipo
                 df_txt['cod_perdcomp'] = df_txt['cod_perdcomp'].astype(str)
