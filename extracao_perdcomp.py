@@ -468,6 +468,39 @@ def limpar_tabelas_3_e_4(df_tabela3, df_tabela4):
 
     return df_tabela3, df_tabela4
 
+# Função para ler o arquivo TXT
+def ler_arquivo_txt(uploaded_file, nome_coluna1='cod_perdcomp', nome_coluna2='situacao_perdcomp'):
+    """
+    Lê um arquivo TXT e retorna um DataFrame com duas colunas.
+    Supõe que o arquivo tenha duas colunas separadas por um delimitador (por exemplo, vírgula ou tabulação).
+    """
+    try:
+        # Ler o conteúdo do arquivo
+        conteudo = uploaded_file.read().decode('utf-8')
+        
+        # Dividir o conteúdo em linhas
+        linhas = conteudo.strip().split('\n')
+        
+        # Processar cada linha para extrair as colunas
+        dados = []
+        #cabecalho = linhas[0].strip().split(';')  # Extrair o cabeçalho
+        for linha in linhas[1:]:  # Ignorar o cabeçalho
+            colunas = linha.strip().split(';')  # Usar ';' como delimitador
+            if len(colunas) >= 5:  # Verificar se há pelo menos 5 colunas
+                dados.append([colunas[0], colunas[4]])    
+        # Criar o DataFrame
+        df = pd.DataFrame(dados, columns=['Número de PER/DCOMP', 'Situação'])
+
+        df = df.rename(columns={
+            'Número de PER/DCOMP': nome_coluna1,
+            'Situação': nome_coluna2
+        })
+        return df
+    
+    except Exception as e:
+        st.error(f"Erro ao ler o arquivo TXT: {e}")
+        return None
+
 
 # -------------------------------------------------------
 # APLICAÇÃO STREAMLIT
@@ -483,20 +516,25 @@ def main():
     - Tabela 3: dados da origem dos créditos
     - Tabela 4: dados das DARF pagos
              
-    Tome cuidado ao utilizar os dados, pois a extração pode conter erros. 
+    [ATENÇÃO] Tome cuidado ao utilizar os dados, pois a extração pode conter erros. 
     Algumas das colunas podem vir vazias já que o pdf não contém a informação.
     Se houver dúvidas, consulte o arquivo original.
     """)
 
-    uploaded_files = st.file_uploader(
+    uploaded_files_1 = st.file_uploader(
         "Envie seus arquivos PDF de PER/DCOMP",
         type=["pdf"],
         accept_multiple_files=True
     )
 
-    if uploaded_files:
+    uploaded_files_2 = st.file_uploader(
+        "Envie seus arquivo .TXT ",
+        type=["txt"],
+        accept_multiple_files=False)
+
+    if uploaded_files_1:
         st.write("[INFO] Processando PDFs... aguarde.")
-        df_result = process_pdfs_in_memory(uploaded_files)
+        df_result = process_pdfs_in_memory(uploaded_files_1)
 
         # Monta Tabela1 / Tabela2
         tabela1_cols = [
@@ -528,7 +566,7 @@ def main():
             'valor_total_credito_original_utilizado_documento',
             'valor_saldo_credito_original',
             'cod_perdcomp_cancelado',
-            'Arquivo'
+            'Arquivo', 
         ]
         tabela2_cols = [
             'cod_perdcomp',
@@ -598,12 +636,6 @@ def main():
         # Criar Tabelona com as colunas numeradas corretamente
         df_tabelona = criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4)
 
-        # Dividir 'valor_compensado_dcomp' por 100
-        #if 'valor_total_credito_original_usado_dcomp' in df_tabela1.columns:
-            #df_tabela1['valor_total_credito_original_usado_dcomp'] = df_tabela1['valor_total_credito_original_usado_dcomp'].apply(
-                #lambda x: x / 100 if pd.notna(x) else x
-            #)
-
         colunas_para_somar = [
             'valor_principal_tributo',
             'valor_multa_tributo',
@@ -619,12 +651,12 @@ def main():
                 df_totalizadores[coluna]
                 .str.replace('.', '', regex=False)  # Remove pontos (separadores de milhares)
                 .str.replace(',', '.', regex=False)  # Substitui vírgula por ponto (decimal)
-                .apply(pd.to_numeric, errors='coerce')  # Converte para float
+                .apply(pd.to_numeric, errors='coerce')
         )
         
         df_totalizadores = (
             df_totalizadores.groupby('cod_perdcomp')[colunas_para_somar]
-            .sum()
+            .sum().round(2)
             .reset_index()
         )
 
@@ -640,10 +672,28 @@ def main():
             'total_valor_total_tributo'
         ]
         
-
-    
         # Mesclar os totais na Tabela 1
         df_tabela1 = df_tabela1.merge(df_totalizadores, on='cod_perdcomp', how='left')
+
+
+         # Processar o arquivo TXT, se enviado
+        if uploaded_files_2:
+            st.write("[INFO] Processando arquivo TXT... aguarde.")
+            df_txt = ler_arquivo_txt(uploaded_files_2, 'cod_perdcomp', 'situacao_perdcomp')
+            
+            if not df_txt.empty:
+                st.subheader("Dados do Arquivo TXT")
+                st.dataframe(df_txt)  # Exibir o DataFrame do TXT para verificação
+
+                # Garantir que a coluna 'cod_perdcomp' em df_txt e df_tabela1 tenha o mesmo tipo
+                df_txt['cod_perdcomp'] = df_txt['cod_perdcomp'].astype(str)
+                df_tabela1['cod_perdcomp'] = df_tabela1['cod_perdcomp'].astype(str)
+
+                # Mesclar os dados do TXT na Tabela 1
+                df_tabela1 = df_tabela1.merge(df_txt, on='cod_perdcomp', how='left')
+
+                # Preencher valores ausentes na coluna 'situacao_perdcomp'
+                df_tabela1['situacao_perdcomp'] = df_tabela1['situacao_perdcomp'].fillna('---')
 
          # Exibir Tabelona
         st.subheader("Tabela Geral")
