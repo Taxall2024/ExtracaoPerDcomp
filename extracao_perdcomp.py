@@ -603,37 +603,47 @@ def main():
             #df_tabela1['valor_total_credito_original_usado_dcomp'] = df_tabela1['valor_total_credito_original_usado_dcomp'].apply(
                 #lambda x: x / 100 if pd.notna(x) else x
             #)
-        
-        # Função para converter uma string de valores separados por ';' em uma lista de números
-        # def converter_valores_para_numeros(valores):
-        #     if pd.isna(valores) or valores == '---':
-        #         return []
-        #     return [extrair_valor_numerico(valor) for valor in valores.split(';')]
 
-        # # Aplicar a conversão para as colunas de tributos na Tabela 2 explodida
-        # tributo_cols = ['valor_principal_tributo', 'valor_multa_tributo', 'valor_juros_tributo', 'valor_total_tributo']
-        # for col in tributo_cols:
-        #     df_tabela2_explodida[col] = df_tabela2_explodida[col].apply(converter_valores_para_numeros)
-        
-        # Calcular os totais para cada cod_perdcomp na Tabela 2 explodida
-        totais_tributos = df_tabela2_explodida.groupby('cod_perdcomp').agg({
-            'valor_principal_tributo': lambda x: sum(sum(valores) for valores in x),
-            'valor_multa_tributo': lambda x: sum(sum(valores) for valores in x),
-            'valor_juros_tributo': lambda x: sum(sum(valores) for valores in x),
-            'valor_total_tributo': lambda x: sum(sum(valores) for valores in x)
-        }) .reset_index()
+        colunas_para_somar = [
+            'valor_principal_tributo',
+            'valor_multa_tributo',
+            'valor_juros_tributo',
+            'valor_total_tributo'
+        ]
 
-        # Renomear as colunas para indicar que são totais
-        totais_tributos.columns = [
+        df_totalizadores = df_tabela2_explodida.copy()
+
+        # Converter as colunas para números
+        for coluna in colunas_para_somar:
+            df_totalizadores[coluna] = (
+                df_totalizadores[coluna]
+                .str.replace('.', '', regex=False)  # Remove pontos (separadores de milhares)
+                .str.replace(',', '.', regex=False)  # Substitui vírgula por ponto (decimal)
+                .apply(pd.to_numeric, errors='coerce')  # Converte para float
+        )
+        
+        df_totalizadores = (
+            df_totalizadores.groupby('cod_perdcomp')[colunas_para_somar]
+            .sum()
+            .reset_index()
+        )
+
+        for coluna in colunas_para_somar:
+            df_totalizadores[coluna] = df_totalizadores[coluna].astype(str).str.replace('.', ',', regex=False)
+
+
+        df_totalizadores.columns = [
             'cod_perdcomp',
             'total_valor_principal_tributo',
             'total_valor_multa_tributo',
             'total_valor_juros_tributo',
             'total_valor_total_tributo'
         ]
+        
 
+    
         # Mesclar os totais na Tabela 1
-        df_tabela1 = df_tabela1.merge(totais_tributos, on='cod_perdcomp', how='left')
+        df_tabela1 = df_tabela1.merge(df_totalizadores, on='cod_perdcomp', how='left')
 
          # Exibir Tabelona
         st.subheader("Tabela Geral")
