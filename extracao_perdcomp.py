@@ -684,7 +684,6 @@ def main():
     else:
         st.info("Por favor, faça o upload de um ou mais arquivos PDF.")
 
-
 if __name__ == "__main__":
     import pandas as pd
     main()
