@@ -189,9 +189,9 @@ def extract_info_from_pages(pdf_document):
             'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
             'valor_total_debitos_deste_documento':r"Total dos Débitos deste Documento\s*([\d.,]+)", 
             'valor_total_credito_original_utilizado_documento': r"Total do Crédito Original Utilizado neste Documento\s*([\d.,]+)",
-            'valor_total_debitos_desta_dcomp': r"Total dos Débitos desta DCOMP\s*([\d.,]+)", 
+            'valor_total_debitos_desta_dcomp': r"Total dos débitos desta DCOMP[\s\S]*?([\d.,]+)\s*$", 
             'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original Utilizado nesta DCOMP\s*([\d.,]+)",
-            'csll_devida': r"\s*CSLL Devida\s([\d.,]+)\s*",
+            'csll_devida': r"\sCSLL Devida\s([\d.,]+)\s*",
 
             #Origem do Crédito
             'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
@@ -355,7 +355,7 @@ def process_pdfs_in_memory(uploaded_files):
         'origem_credito_judicial', 'nome_responsavel_preenchimento', 'cod_cpf_preenchimento',
         'cod_per_origem', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida',
         'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao', 'data_transmissao_dctfweb', 'numero_recibo_dctfweb',
-        'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb', 
+        'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb'
     ]
     for coluna in colunas_texto:
         if coluna in df.columns:
@@ -566,6 +566,8 @@ def main():
             'valor_credito_atualizado',
             'valor_total_debitos_deste_documento',
             'valor_total_credito_original_utilizado_documento',
+            'valor_total_debitos_desta_dcomp', 
+            'valor_total_credito_original_utilizado_dcomp',
             'valor_saldo_credito_original',
             'cod_perdcomp_cancelado',
             'Arquivo', 
