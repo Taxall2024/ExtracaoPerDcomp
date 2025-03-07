@@ -84,16 +84,16 @@ def extract_info_from_pages(pdf_document):
         'nome_cliente': None,
         'cod_perdcomp': None,
         'data_transmissao': None,
-        'tipo_transacao': None,
+        'tipo_documento': None,
         'tipo_credito': None,
-        'tipo_perdcomp_retificacao': None,
+        'perdcomp_retificador': None,
         'cod_perdcomp_retificacao': None,
         'origem_credito_judicial': None,
         'nome_responsavel_preenchimento': None,
         'cod_cpf_preenchimento': None,
-        'cod_per_origem': None,
-        'data_inicial_credito': None,
-        'data_final_credito': None,
+        'cod_perdcomp_inicial': None,
+        'data_inicial_periodo': None,
+        'data_final_periodo': None,
         'data_competencia': None,
         'valor_saldo_negativo': None,
         'valor_credito_atualizado': None,
@@ -158,9 +158,9 @@ def extract_info_from_pages(pdf_document):
             'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:LTDA|ME|EIRELI|SA)\b)",
             #'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:\s(?:LTDA|ME|EIRELI|SA)\b)?)",
             'data_transmissao': r"Data de Transmissão\s*([\d/]+)",
-            'tipo_transacao': r"Tipo de Documento\s*([\w\s]+?)(?=\s*Tipo de Crédito)",
+            'tipo_documento': r"Tipo de Documento\s*([\w\s]+?)(?=\s*Tipo de Crédito)",
             'tipo_credito': r"Tipo de Crédito\s*([\w\s]+)(?=\s*PER/DCOMP Retificador)",
-            'tipo_perdcomp_retificacao': r"PER/DCOMP Retificador\s*([\w\s]+?)(?=\n|\.|$)",
+            'perdcomp_retificador': r"PER/DCOMP Retificador\s*([\w\s]+?)(?=\n|\.|$)",
             'cod_perdcomp_retificacao': r"N[º°] PER/DCOMP Retificado\s*([\d.]+-[\d.]+)",
             'origem_credito_judicial': r"Crédito Oriundo de Ação Judicial\s*([\w\s]+?)(?=\n|\.|$)",
             'nome_responsavel_preenchimento': r"Nome\s+([\w\s]+)\s+CPF\s+(\d{3}\.\d{3}\.\d{3}-\d{2})",
@@ -174,9 +174,9 @@ def extract_info_from_pages(pdf_document):
 
         
         2: {
-            'cod_per_origem': r"N[º°] do PER/DCOMP Inicial\s*([\d.]+-[\d.]+)",
-            'data_inicial_credito': r"Data Inicial do Período\s*([\d/]+)",
-            'data_final_credito': r"Data Final do Período\s*([\d/]+)",
+            'cod_perdcomp_inicial': r"N[º°] do PER/DCOMP Inicial\s*([\d.]+-[\d.]+)",
+            'data_inicial_periodo': r"Data Inicial do Período\s*([\d/]+)",
+            'data_final_periodo': r"Data Final do Período\s*([\d/]+)",
             'valor_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
             'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
             'valor_saldo_credito_original': r"Saldo do Crédito Original\s*([\d.,]+)",
@@ -189,7 +189,7 @@ def extract_info_from_pages(pdf_document):
             'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
             'valor_total_debitos_deste_documento':r"Total dos Débitos deste Documento\s*([\d.,]+)", 
             'valor_total_credito_original_utilizado_documento': r"Total do Crédito Original Utilizado neste Documento\s*([\d.,]+)",
-            'valor_total_debitos_desta_dcomp': r"Total dos débitos desta DCOMP[\s\S]*?([\d.,]+)\s*$", 
+            'valor_total_debitos_desta_dcomp': r"Total dos débitos desta DCOMP[\s\S]*?(\d{1,3}(?:\.\d{3})*,\d{2})", 
             'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original Utilizado nesta DCOMP\s*([\d.,]+)",
             'csll_devida': r"\sCSLL Devida\s([\d.,]+)\s*",
 
@@ -232,15 +232,15 @@ def extract_info_from_pages(pdf_document):
     periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
     grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
     numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
-    data_transmissao_dctfweb_pattern = r"\s*(\d{2}/\d{2}/\d{4})"
-    categoria_dcftweb_pattern = r"Geral\s"
+    data_transmissao_dctfweb_pattern = r"Data de Transmissão DCTFWeb\s*(\d{2}/\d{2}/\d{4})"
+    categoria_dcftweb_pattern = r"Categoria DCTFWeb Geral\s"
     periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
     periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
 
     for page_num, patterns in page_patterns.items():
         if page_num < pdf_document.page_count:
             page_text = pdf_document[page_num].get_text()
-            if info.get('tipo_transacao') == 'Pedido de Ressarcimento' and page_num == 2:
+            if info.get('tipo_documento') == 'Pedido de Ressarcimento' and page_num == 2:
                 ano_match = re.search(r"Ano\s*(\d{4})", page_text)
                 trimestre_match = re.search(r"(\d{1,2}[º])\s*Trimestre", page_text)
                 if ano_match and trimestre_match:
@@ -269,11 +269,11 @@ def extract_info_from_pages(pdf_document):
             if match_credito_transmissao:
                 info['valor_credito_original_data_entrega'] = match_credito_transmissao.group(1)
 
-            if info.get('tipo_transacao'):
-                if info['tipo_transacao'] in ['Pedido de Restituição', 'Declaração de Compensação', 'Pedido de Ressarcimento']:
+            if info.get('tipo_documento'):
+                if info['tipo_documento'] in ['Pedido de Restituição', 'Declaração de Compensação', 'Pedido de Ressarcimento']:
                     tipo_credito_pattern = r"Tipo de Crédito\s*([\w\s\-/\.]+)(?=\s*PER/DCOMP Retificador)"
                     cod_per_origem_pattern = r"N[º°] do PER/DCOMP Inicial\s*([\d./-]+)"
-                elif info['tipo_transacao'] == "Pedido de Cancelamento":
+                elif info['tipo_documento'] == "Pedido de Cancelamento":
                     tipo_credito_pattern = r"Tipo de Crédito\s*([\w\s]+)(?=\s*Número do PER)"
                     cod_per_origem_pattern = r"Número do PER/DCOMP a Cancelar\s*([\d./-]+)"
 
@@ -283,10 +283,10 @@ def extract_info_from_pages(pdf_document):
 
                 cod_per_origem_match = re.search(cod_per_origem_pattern, page_text)
                 if cod_per_origem_match:
-                    if info['tipo_transacao'] == "Pedido de Cancelamento":
+                    if info['tipo_documento'] == "Pedido de Cancelamento":
                         info['cod_perdcomp_cancelado'] = cod_per_origem_match.group(1).strip()
                     else:
-                        info['cod_per_origem'] = cod_per_origem_match.group(1).strip()
+                        info['cod_perdcomp_inicial'] = cod_per_origem_match.group(1).strip()
 
     patterns_pags_extras = {
         'cnpj_detentor_debito': cnpj_detentor_debito_pattern,
@@ -351,9 +351,9 @@ def process_pdfs_in_memory(uploaded_files):
             df[col] = df[col].apply(converter_lista_de_numeros)
 
     colunas_texto = [
-        'tipo_perdcomp_retificacao', 'cod_perdcomp_retificacao', 'tipo_credito',
+        'perdcomp_retificador', 'cod_perdcomp_retificacao', 'tipo_credito',
         'origem_credito_judicial', 'nome_responsavel_preenchimento', 'cod_cpf_preenchimento',
-        'cod_per_origem', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida',
+        'cod_perdcomp_inicial', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida',
         'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao', 'data_transmissao_dctfweb', 'numero_recibo_dctfweb',
         'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb'
     ]
@@ -361,7 +361,7 @@ def process_pdfs_in_memory(uploaded_files):
         if coluna in df.columns:
             df[coluna] = df[coluna].fillna('---')
 
-    colunas_data = ['data_inicial_credito', 'data_final_credito', 'data_transmissao']
+    colunas_data = ['data_inicial_periodo', 'data_final_periodo', 'data_transmissao']
     for coluna in colunas_data:
         if coluna in df.columns:
             df[coluna] = pd.to_datetime(df[coluna], format='%d/%m/%Y', errors='coerce')
@@ -544,16 +544,16 @@ def main():
             'nome_cliente',
             'cod_perdcomp',
             'data_transmissao',
-            'tipo_transacao',
+            'tipo_documento',
             'tipo_credito',
-            'tipo_perdcomp_retificacao',
+            'perdcomp_retificador',
             'cod_perdcomp_retificacao',
             'origem_credito_judicial',
             'nome_responsavel_preenchimento',
             'cod_cpf_preenchimento',
-            'cod_per_origem',
-            'data_inicial_credito',
-            'data_final_credito',
+            'cod_perdcomp_inicial',
+            'data_inicial_periodo',
+            'data_final_periodo',
             'data_competencia',
             'selic_acumulada',
             'imposto_devido', 
