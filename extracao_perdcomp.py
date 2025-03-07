@@ -75,7 +75,7 @@ def extrair_valor_numerico(texto, formatar_para_exibicao=False):
             return valor
         except ValueError:
             print(f"[ERRO] Não foi possível converter o texto '{texto}' para float.")
-    return 0
+    
 
 
 def extract_info_from_pages(pdf_document):
@@ -95,13 +95,21 @@ def extract_info_from_pages(pdf_document):
         'data_inicial_credito': None,
         'data_final_credito': None,
         'data_competencia': None,
-        'valor_credito_saldo_negativo': None,
+        'valor_saldo_negativo': None,
         'valor_credito_atualizado': None,
         'selic_acumulada': None,
-        'valor_compensado_dcomp': None,
-        'valor_credito_data_transmissao': None,
-        'valor_saldo_original': None,
+        'csll_devida': None,
+        'valor_original_credito_inicial': None,
+        'valor_total_debitos_deste_documento': None,
+        'valor_total_credito_original_utilizado_documento': None,
+        'valor_total_debitos_desta_dcomp': None,
+        'valor_total_credito_original_usado_dcomp': None,
+        'valor_credito_original_data_entrega': None,
+        'valor_pedido_restituicao': None,
+        'valor_saldo_credito_original': None,
         'cod_perdcomp_cancelado': None,
+        'total_parcelas_composicao_credito': None, 
+        'imposto_devido': None,
         'grupo_tributo': [],
         'debito_sucedida': [],
         'periodicidade': [],
@@ -123,7 +131,7 @@ def extract_info_from_pages(pdf_document):
         'periodo_apuracao_origem_credito': None,
         'cnpj_origem_credito': None,
         'codigo_receita_origem_credito': None,
-        'grupo_tributo_credito_credito': None,  
+        'grupo_tributo_origem_credito': None,  
         'valor_principal_origem_credito': None,
         'valor_multa_origem_credito': None,
         'valor_juros_origem_credito': None,
@@ -132,12 +140,14 @@ def extract_info_from_pages(pdf_document):
         'periodo_apuracao_darf': None,
         'cnpj_darf': None,
         'codigo_receita_darf': None,
+        'numero_documento_arrecadacao': None,
         'data_vencimento_darf': None,
         'data_arrecadacao_darf': None,
         'valor_principal_darf': None,
         'valor_multa_darf': None,
         'valor_juros_darf': None,
         'valor_total_darf': None,
+        'valor_original_credito_darf': None,
         
     }
 
@@ -145,7 +155,10 @@ def extract_info_from_pages(pdf_document):
         0: {
             'cod_cnpj': r"CNPJ \s*([\d./-]+)",
             'cod_perdcomp': r"CNPJ \s*[\d./-]+\s*([\d.]+-[\d.]+)",
-            'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&'\-]+?(?:LTDA|ME|EIRELI|SA)\b)",
+
+            'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:LTDA|ME|EIRELI|SA)\b)",
+            #'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:\s(?:LTDA|ME|EIRELI|SA)\b)?)",
+
             'data_transmissao': r"Data de Transmissão\s*([\d/]+)",
             'tipo_transacao': r"Tipo de Documento\s*([\w\s]+?)(?=\s*Tipo de Crédito)",
             'tipo_credito': r"Tipo de Crédito\s*([\w\s]+)(?=\s*PER/DCOMP Retificador)",
@@ -166,34 +179,44 @@ def extract_info_from_pages(pdf_document):
             'cod_per_origem': r"N[º°] do PER/DCOMP Inicial\s*([\d.]+-[\d.]+)",
             'data_inicial_credito': r"Data Inicial do Período\s*([\d/]+)",
             'data_final_credito': r"Data Final do Período\s*([\d/]+)",
-            'valor_credito_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
+            'valor_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
             'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
-            'valor_saldo_original': r"Saldo do Crédito Original\s*([\d.,]+)",
+            'valor_saldo_credito_original': r"Saldo do Crédito Original\s*([\d.,]+)",
             'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
             'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
-            'valor_credito_data_transmissao': r"\s*([\d.,]+)Crédito Original na Data da Entrega",
-            
+            'valor_credito_original_data_entrega': r"\s*([\d.,]+)Crédito Original na Data da Entrega",
+            'total_parcelas_composicao_credito': r"Total das Parcelas de Composição do Crédito\s*([\d.,]+)",
+            'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
+            'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
+            'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
+            'valor_total_debitos_deste_documento':r"Total dos Débitos deste Documento\s*([\d.,]+)", 
+            'valor_total_credito_original_utilizado_documento': r"Total do Crédito Original Utilizado neste Documento\s*([\d.,]+)",
+            'valor_total_debitos_desta_dcomp': r"Total dos Débitos desta DCOMP\s*([\d.,]+)", 
+            'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original Utilizado nesta DCOMP\s*([\d.,]+)",
+            'csll_devida': r"\s*CSLL Devida\s([\d.,]+)\s*",
+
             #Origem do Crédito
-            'periodo_apuracao_origem_credito': r"Período de Apuração\s*([\d/]+)\s",
-            'cnpj_origem_credito': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Código\s+da\s+Receita",
-            'codigo_receita_origem_credito': r"Código da Receita\s*(\d{4})",
-            'grupo_tributo_credito_credito': r"Grupo de Tributos*([\w\s]+)",
+            'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
+            'cnpj_origem_credito': r"\s([\d.\/-]+)\sCNPJ do Pagamento\s", 
+            'codigo_receita_origem_credito': r"Código da Receita\s(\d{4})",
+            'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
             'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
             'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
-            'valor_juros_origem_credito': r"Valor dos Juros\s*([\d.,]+)", 
+            'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
             'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
 
             #DARF
             'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
-            'cnpj_darf': r"Período\s+de\s+Apuração\s+\d{1,2}/\d{1,2}/\d{4}\s+CNPJ\s*([\d.\/-]+)\s+Data\s+de\s+Vencimento",
+            'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s", 
             'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
+            'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)\s", 
             'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
             'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
-            'valor_principal_darf': r"Data\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
-            'valor_multa_darf': r"Valor da Multa\s*([\d.,]+)", 
-            'valor_juros_darf': r"Valor dos Juros\s*([\d.,]+)", 
-            'valor_total_darf': r"Valor Total do DARF\s*([\d.,]+)",
-            
+            'valor_principal_darf': r"DARF NUMERDADO*?\sData\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
+            'valor_multa_darf': r"DARF NUMERDADO*?\sValor da Multa\s*([\d.,]+)", 
+            'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
+            'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
+            'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)"
         }
     }
 
@@ -203,7 +226,6 @@ def extract_info_from_pages(pdf_document):
     valor_multa_tributo_pattern = r"Multa\s*([\d.,]+)"
     valor_juros_tributo_pattern = r"Juros\s*([\d.,]+)"
     valor_total_tributo_pattern = r"Total\s*([\d.,]+)"
-    valor_compensado_pattern = r"Total do Crédito Original Utilizado nesta DCOMP\s*([\d.,]+)"
     valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"
     cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito\s*([\d./-]+)"
     debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
@@ -213,7 +235,7 @@ def extract_info_from_pages(pdf_document):
     grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
     numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
     data_transmissao_dctfweb_pattern = r"\s*(\d{2}/\d{2}/\d{4})"
-    categoria_dcftweb_pattern = r"Geral"
+    categoria_dcftweb_pattern = r"Geral\s"
     periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
     periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
 
@@ -239,16 +261,15 @@ def extract_info_from_pages(pdf_document):
                     elif key not in ['nome_responsavel_preenchimento', 'cod_cpf_preenchimento']:
                         info[key] = matches[0].strip()
 
-            # valor_compensado_dcomp
-            match_compensado = re.search(valor_compensado_pattern, page_text)
-            if match_compensado:
-                info['valor_compensado_dcomp'] = match_compensado.group(1)
-                info['valor_compensado_dcomp'] = info['valor_compensado_dcomp'].replace('.', '').replace(',', '.')
+            #match_compensado = re.search(valor_compensado_pattern, page_text)
+            #if match_compensado:
+                #info['valor_total_credito_original_usado_dcomp'] = match_compensado.group(1)
+                #info['valor_total_credito_original_usado_dcomp'] = info['valor_total_credito_original_usado_dcomp'].replace('.', '').replace(',', '.')
 
             # valor_credito_data_transmissao
             match_credito_transmissao = re.search(valor_credito_transmissao_pattern, page_text)
             if match_credito_transmissao:
-                info['valor_credito_data_transmissao'] = match_credito_transmissao.group(1)
+                info['valor_credito_original_data_entrega'] = match_credito_transmissao.group(1)
 
             if info.get('tipo_transacao'):
                 if info['tipo_transacao'] in ['Pedido de Restituição', 'Declaração de Compensação', 'Pedido de Ressarcimento']:
@@ -291,10 +312,8 @@ def extract_info_from_pages(pdf_document):
 
     for page_num_extra in range(3, pdf_document.page_count):
         page_text_extra = pdf_document[page_num_extra].get_text()
-        #print(f"Texto da página {page_num_extra}:\n{page_text_extra}\n")
         for key, pattern in patterns_pags_extras.items():
             matches_extra = re.findall(pattern, page_text_extra)
-            #matches_extra = re.findall(pattern, page_text_extra, re.DOTALL)
             if matches_extra:
                 for match_item in matches_extra:
                     info[key].append(match_item)
@@ -316,14 +335,11 @@ def process_pdfs_in_memory(uploaded_files):
 
     df = pd.DataFrame(all_data)
 
-    df['valor_compensado_dcomp'] = df['valor_compensado_dcomp'].apply(extrair_valor_numerico)
-    #df['valor_credito_data_transmissao'] = df['valor_credito_data_transmissao'].apply(extrair_valor_numerico)
-
     cols_tributos_numericos = [
         'valor_principal_tributo',
         'valor_multa_tributo',
         'valor_juros_tributo',
-        'valor_total_tributo'
+        'valor_total_tributo',
     ]
 
     for col in cols_tributos_numericos:
@@ -341,7 +357,7 @@ def process_pdfs_in_memory(uploaded_files):
         'origem_credito_judicial', 'nome_responsavel_preenchimento', 'cod_cpf_preenchimento',
         'cod_per_origem', 'cod_perdcomp_cancelado', 'codigos_receita', 'data_vencimento_tributo', 'grupo_tributo', 'debito_sucedida',
         'cnpj_detentor_debito', 'periodicidade', 'debito_controlado_processo', 'periodo_apuracao', 'data_transmissao_dctfweb', 'numero_recibo_dctfweb',
-        'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb'
+        'categoria_dcftweb', 'periodicidade_dctfweb', 'periodo_apuracao_dctfweb', 
     ]
     for coluna in colunas_texto:
         if coluna in df.columns:
@@ -353,6 +369,7 @@ def process_pdfs_in_memory(uploaded_files):
             df[coluna] = pd.to_datetime(df[coluna], format='%d/%m/%Y', errors='coerce')
 
     return df
+
 
 def explodir_tabela2(df_tabela2):
     cols_explodir = [
@@ -373,8 +390,8 @@ def explodir_tabela2(df_tabela2):
         'valor_multa_tributo',
         'valor_juros_tributo',
         'valor_total_tributo',
-        'periodo_apuracao_credito'
     ]
+    
     linhas_expandidas = []
     for idx, row in df_tabela2.iterrows():
         splitted = {}
@@ -455,6 +472,39 @@ def limpar_tabelas_3_e_4(df_tabela3, df_tabela4):
 
     return df_tabela3, df_tabela4
 
+# Função para ler o arquivo TXT
+def ler_arquivo_txt(uploaded_file, nome_coluna1='cod_perdcomp', nome_coluna2='situacao_perdcomp'):
+    """
+    Lê um arquivo TXT e retorna um DataFrame com duas colunas.
+    Supõe que o arquivo tenha duas colunas separadas por um delimitador (por exemplo, vírgula ou tabulação).
+    """
+    try:
+        # Ler o conteúdo do arquivo
+        conteudo = uploaded_file.read().decode('utf-8')
+        
+        # Dividir o conteúdo em linhas
+        linhas = conteudo.strip().split('\n')
+        
+        # Processar cada linha para extrair as colunas
+        dados = []
+        #cabecalho = linhas[0].strip().split(';')  # Extrair o cabeçalho
+        for linha in linhas[1:]:  # Ignorar o cabeçalho
+            colunas = linha.strip().split(';')  # Usar ';' como delimitador
+            if len(colunas) >= 5:  # Verificar se há pelo menos 5 colunas
+                dados.append([colunas[0], colunas[4]])    
+        # Criar o DataFrame
+        df = pd.DataFrame(dados, columns=['Número de PER/DCOMP', 'Situação'])
+
+        df = df.rename(columns={
+            'Número de PER/DCOMP': nome_coluna1,
+            'Situação': nome_coluna2
+        })
+        return df
+    
+    except Exception as e:
+        st.error(f"Erro ao ler o arquivo TXT: {e}")
+        return None
+
 
 # -------------------------------------------------------
 # APLICAÇÃO STREAMLIT
@@ -469,18 +519,26 @@ def main():
     - Tabela 2: códigos de receita e respectivos valores de tributos
     - Tabela 3: dados da origem dos créditos
     - Tabela 4: dados das DARF pagos
-    
+             
+    [ATENÇÃO] Tome cuidado ao utilizar os dados, pois a extração pode conter erros. 
+    Algumas das colunas podem vir vazias já que o pdf não contém a informação.
+    Se houver dúvidas, consulte o arquivo original.
     """)
 
-    uploaded_files = st.file_uploader(
+    uploaded_files_1 = st.file_uploader(
         "Envie seus arquivos PDF de PER/DCOMP",
         type=["pdf"],
         accept_multiple_files=True
     )
 
-    if uploaded_files:
+    uploaded_files_2 = st.file_uploader(
+        "Envie seus arquivo .TXT ",
+        type=["txt"],
+        accept_multiple_files=False)
+
+    if uploaded_files_1:
         st.write("[INFO] Processando PDFs... aguarde.")
-        df_result = process_pdfs_in_memory(uploaded_files)
+        df_result = process_pdfs_in_memory(uploaded_files_1)
 
         # Monta Tabela1 / Tabela2
         tabela1_cols = [
@@ -500,13 +558,19 @@ def main():
             'data_final_credito',
             'data_competencia',
             'selic_acumulada',
-            'valor_credito_saldo_negativo',
-            'valor_credito_data_transmissao',
+            'imposto_devido', 
+            'csll_devida',
+            'total_parcelas_composicao_credito',
+            'valor_original_credito_inicial',
+            'valor_saldo_negativo',
+            'valor_credito_original_data_entrega',
+            'valor_pedido_restituicao',
             'valor_credito_atualizado',
-            'valor_compensado_dcomp',
-            'valor_saldo_original',
+            'valor_total_debitos_deste_documento',
+            'valor_total_credito_original_utilizado_documento',
+            'valor_saldo_credito_original',
             'cod_perdcomp_cancelado',
-            'Arquivo'
+            'Arquivo', 
         ]
         tabela2_cols = [
             'cod_perdcomp',
@@ -534,7 +598,7 @@ def main():
             'periodo_apuracao_origem_credito',
             'cnpj_origem_credito',
             'codigo_receita_origem_credito',
-            'grupo_tributo_credito_credito',
+            'grupo_tributo_origem_credito',
             'valor_principal_origem_credito',
             'valor_multa_origem_credito', 
             'valor_juros_origem_credito',
@@ -546,12 +610,15 @@ def main():
             'periodo_apuracao_darf',
             'cnpj_darf',
             'codigo_receita_darf',
+            'numero_documento_arrecadacao',
             'data_vencimento_darf',
             'data_arrecadacao_darf',
             'valor_principal_darf',
             'valor_multa_darf',
             'valor_juros_darf',
-            'valor_total_darf'
+            'valor_total_darf',
+            'valor_original_credito_darf'
+
         ]
 
         df_tabela1 = df_result[tabela1_cols].copy()
@@ -573,11 +640,64 @@ def main():
         # Criar Tabelona com as colunas numeradas corretamente
         df_tabelona = criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4)
 
-        # Dividir 'valor_compensado_dcomp' por 100
-        if 'valor_compensado_dcomp' in df_tabela1.columns:
-            df_tabela1['valor_compensado_dcomp'] = df_tabela1['valor_compensado_dcomp'].apply(
-                lambda x: x / 100 if pd.notna(x) else x
-            )
+        colunas_para_somar = [
+            'valor_principal_tributo',
+            'valor_multa_tributo',
+            'valor_juros_tributo',
+            'valor_total_tributo'
+        ]
+
+        df_totalizadores = df_tabela2_explodida.copy()
+
+        # Converter as colunas para números
+        for coluna in colunas_para_somar:
+            df_totalizadores[coluna] = (
+                df_totalizadores[coluna]
+                .str.replace('.', '', regex=False)  # Remove pontos (separadores de milhares)
+                .str.replace(',', '.', regex=False)  # Substitui vírgula por ponto (decimal)
+                .apply(pd.to_numeric, errors='coerce')
+        )
+        
+        df_totalizadores = (
+            df_totalizadores.groupby('cod_perdcomp')[colunas_para_somar]
+            .sum().round(2)
+            .reset_index()
+        )
+
+        for coluna in colunas_para_somar:
+            df_totalizadores[coluna] = df_totalizadores[coluna].astype(str).str.replace('.', ',', regex=False)
+
+
+        df_totalizadores.columns = [
+            'cod_perdcomp',
+            'total_valor_principal_tributo',
+            'total_valor_multa_tributo',
+            'total_valor_juros_tributo',
+            'total_valor_total_tributo'
+        ]
+        
+        # Mesclar os totais na Tabela 1
+        df_tabela1 = df_tabela1.merge(df_totalizadores, on='cod_perdcomp', how='left')
+
+
+         # Processar o arquivo TXT, se enviado
+        if uploaded_files_2:
+            st.write("[INFO] Processando arquivo TXT... aguarde.")
+            df_txt = ler_arquivo_txt(uploaded_files_2, 'cod_perdcomp', 'situacao_perdcomp')
+            
+            if not df_txt.empty:
+                #st.subheader("Dados do Arquivo TXT")
+                #st.dataframe(df_txt)  # Exibir o DataFrame do TXT para verificação
+
+                # Garantir que a coluna 'cod_perdcomp' em df_txt e df_tabela1 tenha o mesmo tipo
+                df_txt['cod_perdcomp'] = df_txt['cod_perdcomp'].astype(str)
+                df_tabela1['cod_perdcomp'] = df_tabela1['cod_perdcomp'].astype(str)
+
+                # Mesclar os dados do TXT na Tabela 1
+                df_tabela1 = df_tabela1.merge(df_txt, on='cod_perdcomp', how='left')
+
+                # Preencher valores ausentes na coluna 'situacao_perdcomp'
+                df_tabela1['situacao_perdcomp'] = df_tabela1['situacao_perdcomp'].fillna('---')
 
          # Exibir Tabelona
         st.subheader("Tabela Geral")
@@ -615,16 +735,8 @@ def main():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-    # #Botão para excluir todos os arquivos carregados
-    #     if st.button("Excluir todos os PDFs carregados"):
-    #         uploaded_files.clear()
-    #         st.success("Todos os PDFs foram excluídos com sucesso!")
-    #         st.rerun()  # Recarrega a página para refletir a remoção dos arquivos
-    #         #Adicionar botão para eliminar todos os arquivos carregados
-
     else:
         st.info("Por favor, faça o upload de um ou mais arquivos PDF.")
-
 
 if __name__ == "__main__":
     import pandas as pd
