@@ -188,7 +188,7 @@ class RegexRules():
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/\d{4})\s*",
                 'valor_credito_original_data_entrega': r"\s*([\d.,]+)Crédito Original na Data da Entrega",
-                'total_parcelas_composicao_credito': r"Total das Parcelas de Composição do Crédito\s*([\d.,]+)",
+                'total_parcelas_composicao_credito': r"Total das Parcelas de Composição do Crédito\s([\d.,]+)",
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
                 'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
