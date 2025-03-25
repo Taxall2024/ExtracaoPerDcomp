@@ -111,6 +111,8 @@ class RegexRules():
             'valor_saldo_credito_original': None,
             'cod_perdcomp_cancelado': None,
             'total_parcelas_composicao_credito': None, 
+            'valor_disponivel_para_restituicao_apurado_documento_inicial': None,
+            'valor_original_credito_utilizado_compensacoes_gfip': None,
             'imposto_devido': None,
             'grupo_tributo': [],
             'debito_sucedida': [],
