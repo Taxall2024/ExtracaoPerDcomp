@@ -186,7 +186,7 @@ class RegexRules():
                 'data_final_periodo': r"Data Final do Período\s*([\d/]+)",
                 'valor_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
                 'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
-                'valor_saldo_credito_original': r"Saldo do Crédito Original\s*([\d.,]+)",
+                'valor_saldo_credito_original': r"(?:Saldo do Crédito Original\s([\d.,]+))|(?:\s*[\d.,]+Saldo do Crédito Original\s)",
                 'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/\d{4})\s*",
@@ -205,7 +205,7 @@ class RegexRules():
                 'valor_total_debitos_desta_dcomp': r"Total dos débitos desta DCOMP[\s\S]*?(\d{1,3}(?:\.\d{3})*,\d{2})",
                 'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original [Uu]tilizado nesta DCOMP\s*([\d.,]+)",
                 'csll_devida': r"\sCSLL Devida\s([\d.,]+)\s*",
-                'valor_disponivel_para_restituicao_apurado_documento_inicial': r'',
+                'valor_disponivel_para_restituicao_apurado_documento_inicial': r'Valor Disponível para Restituição Apurado no\s*Documento Inicial\s*([\d.,]+)\s*',
                 'valor_original_credito_utilizado_compensacoes_gfip': r"\s*([\d.,]+)\sValor Original do Crédito [Uu]tilizado em\s*Compensações em GFIP",
 
                 #Origem do Crédito
