@@ -206,7 +206,7 @@ class RegexRules():
                 'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original [Uu]tilizado nesta DCOMP\s*([\d.,]+)",
                 'csll_devida': r"\sCSLL Devida\s([\d.,]+)\s*",
                 'valor_disponivel_para_restituicao_apurado_documento_inicial': r'',
-                'valor_original_credito_utilizado_compensacoes_gfip': r"\s*([\d.,]+)\s*Valor Original do Crédito Utilizado em Compensações GFIP\s*",
+                'valor_original_credito_utilizado_compensacoes_gfip': r"\s*([\d.,]+)\sValor Original do Crédito [Uu]tilizado em\s*Compensações em GFIP",
 
                 #Origem do Crédito
                 'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",

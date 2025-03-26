@@ -60,6 +60,7 @@ def main():
             'data_competencia',
             'competencia',
             'selic_acumulada',
+            'valor_original_credito_utilizado_compensacoes_gfip', 
             'imposto_devido', 
             'csll_devida',
             'total_parcelas_composicao_credito',
