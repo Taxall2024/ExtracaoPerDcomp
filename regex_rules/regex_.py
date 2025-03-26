@@ -160,8 +160,9 @@ class RegexRules():
                 'cod_cnpj': r"CNPJ \s*([\d./-]+)",
                 'cod_perdcomp': r"CNPJ \s*[\d./-]+\s*([\d.]+-[\d.]+)",
 
-                'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:LTDA|ME|EIRELI|SA)\b)",
+                #'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:\s*(?:LTDA|ME|EIRELI|SA)\b|$))",
                 #'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:\s(?:LTDA|ME|EIRELI|SA)\b)?)",
+                'nome_cliente': r"Nome Empresarial\s*(.+)",
 
                 'data_transmissao': r"Data de Transmissão\s*([\d/]+)",
                 'tipo_documento': r"Tipo de Documento\s*([\w\s]+?)(?=\s*Tipo de Crédito)",
@@ -189,7 +190,12 @@ class RegexRules():
                 'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/\d{4})\s*",
-                'valor_credito_original_data_entrega': r'(?:.*?([\d.,]+)\s*Selic Acumulada.*?([\d.,]+)\s*Selic Acumulada)|(?:.*?([\d.,]+)\s*Crédito Original na Data da Entrega)',
+                # 'valor_credito_original_data_entrega': re.compile(
+                #                                         r'(?:(\d{1,3}(?:\.\d{3})*,\d{2})\s+(\d{1,3}(?:\.\d{3})*,\d{2})\s*Selic Acumulada)'  # Caso 1: Dois valores antes da Selic (captura o segundo)
+                #                                         r'|'  # Operador "OU"
+                #                                         r'(?:(\d{1,3}(?:\.\d{3})*,\d{2})\s*Crédito Original na Data da Entrega)'  # Caso 2: Valor antes do "Crédito Original"
+                #                                         ),
+                'valor_credito_original_data_entrega': r'(\d{1,3}(?:\.\d{3})*(?:,\d{2}))(?:.*?Selic Acumulada.*?Crédito Original na Data da Entrega|\s*Selic Acumulada)', 
                 'total_parcelas_composicao_credito': r'(?:(?<=Total das Parcelas de Composição do Crédito\s)[\d.,]+|[\d.,]+(?=\s*Total das Parcelas de Composição do Crédito))',
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
