@@ -186,7 +186,7 @@ class RegexRules():
                 'data_final_periodo': r"Data Final do Período\s*([\d/]+)",
                 'valor_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
                 'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
-                'valor_saldo_credito_original': r"(?:Saldo do Crédito Original\s([\d.,]+))|(?:\s*[\d.,]+Saldo do Crédito Original\s)",
+                'valor_saldo_credito_original':  r"(?<=Saldo do Crédito Original\s)[\d.,]+|[\d.,]+(?=\s*Saldo do Crédito Original)", 
                 'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/\d{4})\s*",
