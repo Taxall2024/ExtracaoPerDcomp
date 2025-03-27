@@ -276,7 +276,6 @@ class RegexRules():
         #Credito_data_entrega
         valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"     
         
-        
 
         for page_num, patterns in page_patterns.items():
             if page_num < pdf_document.page_count:
@@ -352,7 +351,7 @@ class RegexRules():
         for page_num_extra in range(3, pdf_document.page_count):
             page_text_extra = pdf_document[page_num_extra].get_text()
             for key, pattern in patterns_pags_extras.items():
-                matches_extra = re.findall(pattern, page_text_extra)
+                matches_extra = re.findall(pattern, page_text_extra, flags=re.IGNORECASE)
                 if matches_extra:
                     for match_item in matches_extra:
                         info[key].append(match_item)
