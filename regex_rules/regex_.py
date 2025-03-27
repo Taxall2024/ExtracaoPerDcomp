@@ -114,6 +114,7 @@ class RegexRules():
             'valor_disponivel_para_restituicao_apurado_documento_inicial': None,
             'valor_original_credito_utilizado_compensacoes_gfip': None,
             'imposto_devido': None,
+            'valor_credito_passivel_restituicao': None,
             'grupo_tributo': [],
             'debito_sucedida': [],
             'periodicidade': [],
@@ -133,7 +134,7 @@ class RegexRules():
             'periodo_apuracao_dctfweb': [], 
 
             'periodo_apuracao_origem_credito': None,
-            'cnpj_origem_credito': None,
+            'cnpj_pagamento_origem_credito': None,
             'codigo_receita_origem_credito': None,
             'grupo_tributo_origem_credito': None,  
             'valor_principal_origem_credito': None,
@@ -189,7 +190,7 @@ class RegexRules():
                 'valor_saldo_credito_original':  r"(?<=Saldo do Crédito Original\s)[\d.,]+|[\d.,]+(?=\s*Saldo do Crédito Original)", 
                 'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
-                'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/\d{4})\s*",
+               'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
                 # 'valor_credito_original_data_entrega': re.compile(
                 #                                         r'(?:(\d{1,3}(?:\.\d{3})*,\d{2})\s+(\d{1,3}(?:\.\d{3})*,\d{2})\s*Selic Acumulada)'  # Caso 1: Dois valores antes da Selic (captura o segundo)
                 #                                         r'|'  # Operador "OU"
@@ -207,16 +208,30 @@ class RegexRules():
                 'csll_devida': r"\sCSLL Devida\s([\d.,]+)\s*",
                 'valor_disponivel_para_restituicao_apurado_documento_inicial': r'Valor Disponível para Restituição Apurado no\s*Documento Inicial\s*([\d.,]+)\s*',
                 'valor_original_credito_utilizado_compensacoes_gfip': r"\s*([\d.,]+)\sValor Original do Crédito [Uu]tilizado em\s*Compensações em GFIP",
+                'valor_credito_passivel_restituicao': r"Crédito Passível de Restituição\s*([\d.,]+)",
+
 
                 #Origem do Crédito
-                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
-                'cnpj_origem_credito': r"\s([\d.\/-]+)\sCNPJ do Pagamento\s", 
-                'codigo_receita_origem_credito': r"Código da Receita\s(\d{4})",
-                'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
-                'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
-                'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
-                'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
-                'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
+                # 'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
+                # 'cnpj_pagamento_origem_credito': r"\s([\d.\/-]+)\sCNPJ do Pagamento\s", 
+                # 'codigo_receita_origem_credito': r"Código da Receita\s(\d{4})",
+                # 'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
+                # 'data_arrecadacao_origem_credito': r'Data da Arrecadação\s*([\d/]+)',
+                # 'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
+                # 'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
+                # 'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
+                # 'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
+
+                # Origem do Crédito
+                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO.*?(\d{2}/\d{2}/\d{4})\s+Período de Apuração1",
+                'cnpj_pagamento_origem_credito': r"ORIGEM DO CRÉDITO.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
+                'codigo_receita_origem_credito': r"ORIGEM DO CRÉDITO.*?Código da Receita\s+(\d{4})",
+                'grupo_tributo_origem_credito': r"ORIGEM DO CRÉDITO.*?Grupo de Tributo\s+([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
+                'data_arrecadacao_origem_credito': r"ORIGEM DO CRÉDITO.*?Data da Arrecadação\s+(\d{2}/\d{2}/\d{4})",
+                'valor_principal_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor do Principal\s+([\d.,]+)",
+                'valor_multa_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor da Multa\s+([\d.,]+)",   
+                'valor_juros_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor dos Juros\s+([\d.,]+)",
+                'valor_total_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor Total\s+([\d.,]+)",
 
                 #DARF
                 'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
@@ -230,6 +245,9 @@ class RegexRules():
                 'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
                 'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
                 'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)"
+
+                #GPS
+
             }
         }
 

@@ -60,6 +60,7 @@ def main():
             'data_competencia',
             'competencia',
             'selic_acumulada',
+            'valor_credito_passivel_restituicao',
             'valor_original_credito_utilizado_compensacoes_gfip',
             'valor_disponivel_para_restituicao_apurado_documento_inicial', 
             'imposto_devido', 
@@ -102,7 +103,7 @@ def main():
         tabela3_cols =[   
             'cod_perdcomp',
             'periodo_apuracao_origem_credito',
-            'cnpj_origem_credito',
+            'cnpj_pagamento_origem_credito',
             'codigo_receita_origem_credito',
             'grupo_tributo_origem_credito',
             'valor_principal_origem_credito',
