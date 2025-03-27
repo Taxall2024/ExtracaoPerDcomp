@@ -222,16 +222,17 @@ class RegexRules():
                 # 'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
                 # 'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
 
+
                 # Origem do Crédito
-                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO\s+(\d{2}/\d{2}/\d{4})\s+Período de Apuração\d*\.",
-                'cnpj_origem_credito': r"(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
+                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO\s+(\d{2}/\d{2}/\d{4})\s+Período de Apuração\d*\.?",
+                'cnpj_pagamento_origem_credito': r"(?<!\d)(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
                 'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4})",
-                'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=Código)",
-                'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  # Corrigi "da" para "de"
+                'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=\s*Código da Receita)",
+                'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  
                 'valor_principal_origem_credito': r"Valor do Principal\s+([\d.,]+)",
                 'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
-                'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros",  # Capture o valor ANTES do rótulo
-                'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  # \b evita capturar o CNPJ
+                'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
+                'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
 
                 #DARF
                 'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
@@ -252,15 +253,16 @@ class RegexRules():
 
             3: {
                 # Origem do Crédito
-                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO.*?(\d{2}/\d{2}/\d{4})\s*+\s*Período de Apuração1\s",
-                'cnpj_pagamento_origem_credito': r"ORIGEM DO CRÉDITO.*?(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
-                'codigo_receita_origem_credito': r"ORIGEM DO CRÉDITO.*?Código da Receita\s+(\d{4})",
-                'grupo_tributo_origem_credito': r"ORIGEM DO CRÉDITO.*?Grupo de Tributo\s+([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
-                'data_arrecadacao_origem_credito': r"ORIGEM DO CRÉDITO.*?Data da Arrecadação\s+(\d{2}/\d{2}/\d{4})",
-                'valor_principal_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor do Principal\s+([\d.,]+)",
-                'valor_multa_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor da Multa\s+([\d.,]+)",   
-                'valor_juros_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor dos Juros\s+([\d.,]+)",
-                'valor_total_origem_credito': r"ORIGEM DO CRÉDITO.*?Valor Total\s+([\d.,]+)",
+                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO\s+(\d{2}/\d{2}/\d{4})\s+Período de Apuração\d*\.?",
+                'cnpj_pagamento_origem_credito': r"(?<!\d)(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
+                'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4})",
+                'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=\s*Código da Receita)",
+                'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  
+                'valor_principal_origem_credito': r"Valor do Principal\s+([\d.,]+)",
+                'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
+                'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
+                'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
+
             }
         }
 

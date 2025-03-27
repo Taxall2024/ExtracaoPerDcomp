@@ -106,6 +106,7 @@ def main():
             'cnpj_pagamento_origem_credito',
             'codigo_receita_origem_credito',
             'grupo_tributo_origem_credito',
+            'data_arrecadacao_origem_credito', 
             'valor_principal_origem_credito',
             'valor_multa_origem_credito', 
             'valor_juros_origem_credito',
