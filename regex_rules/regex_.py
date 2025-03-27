@@ -196,7 +196,7 @@ class RegexRules():
                 #                                         r'|'  # Operador "OU"
                 #                                         r'(?:(\d{1,3}(?:\.\d{3})*,\d{2})\s*Crédito Original na Data da Entrega)'  # Caso 2: Valor antes do "Crédito Original"
                 #                                         ),
-                'valor_credito_original_data_entrega': r'(\d{1,3}(?:\.\d{3})*(?:,\d{2}))(?:.*?Selic Acumulada.*?Crédito Original na Data da Entrega|\s*Selic Acumulada)', 
+                #'valor_credito_original_data_entrega': r'(\d{1,3}(?:\.\d{3})*(?:,\d{2}))(?:.*?Selic Acumulada.*?Crédito Original na Data da Entrega|\s*Selic Acumulada)', 
                 'total_parcelas_composicao_credito': r'(?:(?<=Total das Parcelas de Composição do Crédito\s)[\d.,]+|[\d.,]+(?=\s*Total das Parcelas de Composição do Crédito))',
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
@@ -209,18 +209,6 @@ class RegexRules():
                 'valor_disponivel_para_restituicao_apurado_documento_inicial': r'Valor Disponível para Restituição Apurado no\s*Documento Inicial\s*([\d.,]+)\s*',
                 'valor_original_credito_utilizado_compensacoes_gfip': r"\s*([\d.,]+)\sValor Original do Crédito [Uu]tilizado em\s*Compensações em GFIP",
                 'valor_credito_passivel_restituicao': r"Crédito Passível de Restituição\s*([\d.,]+)",
-
-
-                #Origem do Crédito
-                # 'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
-                # 'cnpj_pagamento_origem_credito': r"\s([\d.\/-]+)\sCNPJ do Pagamento\s", 
-                # 'codigo_receita_origem_credito': r"Código da Receita\s(\d{4})",
-                # 'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
-                # 'data_arrecadacao_origem_credito': r'Data da Arrecadação\s*([\d/]+)',
-                # 'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
-                # 'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
-                # 'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
-                # 'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
 
 
                 # Origem do Crédito
@@ -266,24 +254,29 @@ class RegexRules():
             }
         }
 
-        codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2}\s*-\s*.*)(?=\nGrupo de Tributo|$)"
-        data_vencimento_tributo_pattern = r"Data de Vencimento do Tributo/Quota\s*([\d/]+)"
-        valor_principal_tributo_pattern = r"Principal\s*([\d.,]+)"
-        valor_multa_tributo_pattern = r"Multa\s*([\d.,]+)"
-        valor_juros_tributo_pattern = r"Juros\s*([\d.,]+)"
-        valor_total_tributo_pattern = r"Total\s*([\d.,]+)"
-        valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"
         cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito\s*([\d./-]+)"
         debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
+        grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
+        codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2}\s*-\s*.*)(?=\nGrupo de Tributo|$)"
         debito_controlado_processo_pattern = r"Débito Controlado em Processo\s*([\w\s]+?)(?=\n|\.|$)"
         periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
         periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
-        grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
+        data_vencimento_tributo_pattern = r"Data de Vencimento do Tributo/Quota\s*([\d/]+)"
         numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
         data_transmissao_dctfweb_pattern = r"Data de Transmissão DCTFWeb\s*(\d{2}/\d{2}/\d{4})"
         categoria_dcftweb_pattern = r"Categoria DCTFWeb Geral\s"
         periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
         periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
+        valor_principal_tributo_pattern = r"Principal\s*([\d.,]+)"
+        valor_multa_tributo_pattern = r"Multa\s*([\d.,]+)"
+        valor_juros_tributo_pattern = r"Juros\s*([\d.,]+)"
+        valor_total_tributo_pattern = r"Total\s*([\d.,]+)"
+
+
+        #Credito_data_entrega
+        valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"     
+        
+        
 
         for page_num, patterns in page_patterns.items():
             if page_num < pdf_document.page_count:
