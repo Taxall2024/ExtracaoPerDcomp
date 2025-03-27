@@ -136,7 +136,8 @@ class RegexRules():
             'periodo_apuracao_origem_credito': None,
             'cnpj_pagamento_origem_credito': None,
             'codigo_receita_origem_credito': None,
-            'grupo_tributo_origem_credito': None,  
+            'grupo_tributo_origem_credito': None, 
+            'data_arrecadacao_origem_credito': None,
             'valor_principal_origem_credito': None,
             'valor_multa_origem_credito': None,
             'valor_juros_origem_credito': None,
@@ -351,7 +352,7 @@ class RegexRules():
         for page_num_extra in range(3, pdf_document.page_count):
             page_text_extra = pdf_document[page_num_extra].get_text()
             for key, pattern in patterns_pags_extras.items():
-                matches_extra = re.findall(pattern, page_text_extra, flags=re.IGNORECASE)
+                matches_extra = re.findall(pattern, page_text_extra, re.IGNORECASE)
                 if matches_extra:
                     for match_item in matches_extra:
                         info[key].append(match_item)
