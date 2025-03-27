@@ -191,7 +191,7 @@ class RegexRules():
                 'valor_saldo_credito_original':  r"(?<=Saldo do Crédito Original\s)[\d.,]+|[\d.,]+(?=\s*Saldo do Crédito Original)", 
                 'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
-               'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
+                'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
                 # 'valor_credito_original_data_entrega': re.compile(
                 #                                         r'(?:(\d{1,3}(?:\.\d{3})*,\d{2})\s+(\d{1,3}(?:\.\d{3})*,\d{2})\s*Selic Acumulada)'  # Caso 1: Dois valores antes da Selic (captura o segundo)
                 #                                         r'|'  # Operador "OU"
