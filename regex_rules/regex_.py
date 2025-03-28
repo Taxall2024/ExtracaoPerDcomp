@@ -350,17 +350,28 @@ class RegexRules():
 
         flags = re.IGNORECASE | re.MULTILINE
 
+        def clean_text(text):
+            """Normaliza o texto para facilitar a extração"""
+            text = re.sub(r'\s+', ' ', text)  # Remove espaços múltiplos
+            text = re.sub(r'(?<=\d)\s+(?=\d)', '', text)  # Junta números separados por espaço
+            return text
+
         for page_num_extra in range(3, pdf_document.page_count):
             page_text_extra = pdf_document[page_num_extra].get_text()
+            page_text_extra = clean_text(page_text_extra)
             
-            # Pré-processamento para ajudar nos matches
-            page_text_extra = re.sub(r'(\n)(?=\S)', r' ', page_text_extra)  # Junta linhas quebradas
-            page_text_extra = re.sub(r'\s+', ' ', page_text_extra)  # Normaliza espaços
+            # Extrai blocos de débito separadamente
+            debito_blocks = re.split(r'\d{3}\.\s+Débito\s+', page_text_extra)[1:]
             
-            for key, pattern in patterns_pags_extras.items():
-                matches_extra = re.findall(pattern, page_text_extra, flags)
-                if matches_extra:
-                    info[key].extend([m.strip() for m in matches_extra])
+            for block in debito_blocks:
+                for key, pattern in patterns_pags_extras.items():
+                    matches = re.search(pattern, block, flags)
+                    if matches:
+                        value = matches.group(1).strip()
+                        # Tratamento especial para códigos de receita com quebras
+                        if key == 'codigos_receita':
+                            value = re.sub(r'\s+', ' ', value).replace('- ', '-')
+                        info[key].append(value)
         
 
         for key, value in info.items():
