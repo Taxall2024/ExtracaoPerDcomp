@@ -267,15 +267,15 @@ class RegexRules():
 
         cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito[\s:]*([\d./-]+)"
         debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
-        grupo_tributo_pattern = r'Grupo\s+de\s+Tributo\s+([A-Za-zÀ-ú\s]+?)(?=\s*\n|\.|Débito|Período|$)'
-        codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2}\s*-\s*.*)(?=\nGrupo de Tributo|$)"
-        debito_controlado_processo_pattern = r"Débito Controlado em Processo\s([\w\s]+?)(?=\n|\.|$)"
+        grupo_tributo_pattern = r'Grupo\s+de\s+Tributo\s+([A-Za-zÀ-ú\s\-\–]+?)(?=\s*(?:\n|Débito|Período|$))'
+        codigo_receita_pattern = r"Código da Receita/Denominação[\s:-]*(\d{4}-\d{2}\s*-\s*.*?)(?=\s*(?:Grupo de Tributo|$))"
+        debito_controlado_processo_pattern = r"Débito Controlado em Processo[\s:]*(\b\w+\b)(?=\s*(?:\n|\.|Período|Data|$))"
         periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
         periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
         data_vencimento_tributo_pattern = r"Data de Vencimento do Tributo/Quota\s*([\d/]+)"
         numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
-        data_transmissao_dctfweb_pattern = r"Data de Transmissão DCTFWeb\s*(\d{2}/\d{2}/\d{4})"
-        categoria_dcftweb_pattern = r"Categoria DCTFWeb Geral\s"
+        data_transmissao_dctfweb_pattern = r"Data\s+de\s+Transmissão\s+DCTFWeb\s*(\d{2}/\d{2}/\d{4})(?=\s|$)"
+        categoria_dcftweb_pattern = r"Categoria\s+DCTFWeb.*?(Geral)(?=\s|\d|$)"
         periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
         periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
         valor_principal_tributo_pattern = r"Principal\s*([\d.,]+)"
@@ -363,8 +363,8 @@ class RegexRules():
 
         def clean_text(text):
             """Normaliza o texto para facilitar a extração"""
-            text = re.sub(r'\s+', ' ', text)  # Remove espaços múltiplos
-            text = re.sub(r'(?<=\d)\s+(?=\d)', '', text)  # Junta números separados por espaço
+            text = re.sub(r'\s+', ' ', text)  
+            text = re.sub(r'(?<=\d)\s+(?=\d)', '', text)  
             return text
 
         for page_num_extra in range(3, pdf_document.page_count):
