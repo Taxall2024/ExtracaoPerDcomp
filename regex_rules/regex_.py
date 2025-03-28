@@ -251,11 +251,10 @@ class RegexRules():
                 'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
                 'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
                 'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
-
             }
         }
 
-        cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito\s*([\d./-]+)"
+        cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito[\s:]*([\d./-]+)"
         debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
         grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
         codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2}\s*-\s*.*)(?=\nGrupo de Tributo|$)"
@@ -349,13 +348,20 @@ class RegexRules():
             'valor_total_tributo': valor_total_tributo_pattern
         }
 
+        flags = re.IGNORECASE | re.MULTILINE
+
         for page_num_extra in range(3, pdf_document.page_count):
             page_text_extra = pdf_document[page_num_extra].get_text()
+            
+            # Pré-processamento para ajudar nos matches
+            page_text_extra = re.sub(r'(\n)(?=\S)', r' ', page_text_extra)  # Junta linhas quebradas
+            page_text_extra = re.sub(r'\s+', ' ', page_text_extra)  # Normaliza espaços
+            
             for key, pattern in patterns_pags_extras.items():
-                matches_extra = re.findall(pattern, page_text_extra, re.IGNORECASE)
+                matches_extra = re.findall(pattern, page_text_extra, flags)
                 if matches_extra:
-                    for match_item in matches_extra:
-                        info[key].append(match_item)
+                    info[key].extend([m.strip() for m in matches_extra])
+        
 
         for key, value in info.items():
             if isinstance(value, list):
