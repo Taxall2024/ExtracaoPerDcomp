@@ -244,25 +244,30 @@ class RegexRules():
                 'valor_multa_darf': r"DARF NUMERDADO*?\sValor da Multa\s*([\d.,]+)", 
                 'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
                 'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
-                'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)"
+                'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)",
 
                 #GPS
+                'codigo_pagamento_gps': r"(\d{4})",
+                'data_competencia_gps': r"Data de Competência\s*([\d/]+)",
+                #'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)", 
+                #'identificador_detentor_credito_gps': r"Identificador do Detentor do Crédito\s*([\d./-]+)",
+
 
 
             },
 
-            3: {
-                # Origem do Crédito
-                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO\s+(\d{2}/\d{2}/\d{4})\s+Período de Apuração\d*\.?",
-                'cnpj_pagamento_origem_credito': r"(?<!\d)(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
-                'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4})",
-                'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=\s*Código da Receita)",
-                'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  
-                'valor_principal_origem_credito': r"Valor do Principal\s+([\d.,]+)",
-                'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
-                'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
-                'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
-            }
+            # 3: {
+            #     # Origem do Crédito
+            #     'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO\s+(\d{2}/\d{2}/\d{4})\s+Período de Apuração\d*\.?",
+            #     'cnpj_pagamento_origem_credito': r"(?<!\d)(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
+            #     'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4})",
+            #     'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=\s*Código da Receita)",
+            #     'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  
+            #     'valor_principal_origem_credito': r"Valor do Principal\s+([\d.,]+)",
+            #     'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
+            #     'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
+            #     'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
+            # }
         }
 
         cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito[\s:]*([\d./-]+)"
@@ -272,16 +277,16 @@ class RegexRules():
         debito_controlado_processo_pattern = r"Débito Controlado em Processo[\s:]*(\b\w+\b)(?=\s*(?:\n|\.|Período|Data|$))"
         periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
         periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
-        data_vencimento_tributo_pattern = r"Data de Vencimento do Tributo/Quota\s*([\d/]+)"
+        data_vencimento_tributo_pattern = r"(?i)Data\s*de\s*Vencimento\s*do\s*Tributo/Quota[\s:]*(\d{2}/\d{2}/\d{4})"
         numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
         data_transmissao_dctfweb_pattern = r"Data\s+de\s+Transmissão\s+DCTFWeb\s*(\d{2}/\d{2}/\d{4})(?=\s|$)"
         categoria_dcftweb_pattern = r"Categoria\s+DCTFWeb.*?(Geral)(?=\s|\d|$)"
         periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
         periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
-        valor_principal_tributo_pattern = r"Principal\s*([\d.,]+)"
-        valor_multa_tributo_pattern = r"Multa\s*([\d.,]+)"
-        valor_juros_tributo_pattern = r"Juros\s*([\d.,]+)"
-        valor_total_tributo_pattern = r"Total\s*([\d.,]+)"
+        valor_principal_tributo_pattern = r"(?:^|[\s>])Principal\s+([\d.,]+)"
+        valor_multa_tributo_pattern = r"(?:^|[\s>])Multa\s+([\d.,]+)"
+        valor_juros_tributo_pattern = r"(?:^|[\s>])Juros\s+([\d.,]+)"
+        valor_total_tributo_pattern = r"(?:^|[\s>])Total\s+([\d.,]+)(?=\s|$)"
 
 
         #Credito_data_entrega
