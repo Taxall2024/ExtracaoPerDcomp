@@ -111,7 +111,8 @@ def main():
             'valor_principal_origem_credito',
             'valor_multa_origem_credito', 
             'valor_juros_origem_credito',
-            'valor_total_origem_credito'
+            'valor_total_origem_credito', 
+            'valor_original_credito_origem_credito',
             ]
 
         tabela4_cols = [

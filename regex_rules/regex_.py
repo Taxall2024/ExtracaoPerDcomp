@@ -142,6 +142,7 @@ class RegexRules():
             'valor_multa_origem_credito': None,
             'valor_juros_origem_credito': None,
             'valor_total_origem_credito': None,
+            'valor_original_credito_origem_credito': None,
 
             'periodo_apuracao_darf': None,
             'cnpj_darf': None,
@@ -224,9 +225,9 @@ class RegexRules():
 
 
                 # Origem do Crédito
-                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO\s+(\d{2}/\d{2}/\d{4})\s+Período de Apuração\d*\.?",
+                'periodo_apuracao_origem_credito': r"(?i)(?:Período de Apuração|Período de Apuração)\s*(\d{2}/\d{2}/\d{4})",
                 'cnpj_pagamento_origem_credito': r"(?<!\d)(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
-                'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4})",
+                'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4}-\d{2})",
                 'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=\s*Código da Receita)",
                 'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  
                 'valor_principal_origem_credito': r"Valor do Principal\s+([\d.,]+)",
@@ -259,18 +260,7 @@ class RegexRules():
 
             },
 
-            # 3: {
-            #     # Origem do Crédito
-            #     'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO\s+(\d{2}/\d{2}/\d{4})\s+Período de Apuração\d*\.?",
-            #     'cnpj_pagamento_origem_credito': r"(?<!\d)(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
-            #     'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4})",
-            #     'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=\s*Código da Receita)",
-            #     'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  
-            #     'valor_principal_origem_credito': r"Valor do Principal\s+([\d.,]+)",
-            #     'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
-            #     'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
-            #     'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
-            # }
+
         }
 
         cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito[\s:]*([\d./-]+)"
