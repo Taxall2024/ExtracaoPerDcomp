@@ -59,6 +59,7 @@ def main():
             'data_final_periodo',
             'data_competencia',
             'competencia',
+            'data_arrecadacao', 
             'selic_acumulada',
             'valor_credito_passivel_restituicao',
             'valor_original_credito_utilizado_compensacoes_gfip',

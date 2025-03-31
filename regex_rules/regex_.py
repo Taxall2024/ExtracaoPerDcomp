@@ -198,16 +198,17 @@ class RegexRules():
                 'data_final_periodo': r"Data Final do Período\s*([\d/]+)",
                 'valor_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
                 'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
-                'valor_saldo_credito_original':  r"(?<=Saldo do Crédito Original\s)[\d.,]+|[\d.,]+(?=\s*Saldo do Crédito Original)", 
+                'valor_saldo_credito_original': r"Saldo do Crédito Original[\s:]*([\d.,]+)", 
                 'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
+                'data_arrecadacao': r'Data de Arrecadação\s*([\d/]+)', 
                 # 'valor_credito_original_data_entrega': re.compile(
                 #                                         r'(?:(\d{1,3}(?:\.\d{3})*,\d{2})\s+(\d{1,3}(?:\.\d{3})*,\d{2})\s*Selic Acumulada)'  # Caso 1: Dois valores antes da Selic (captura o segundo)
                 #                                         r'|'  # Operador "OU"
                 #                                         r'(?:(\d{1,3}(?:\.\d{3})*,\d{2})\s*Crédito Original na Data da Entrega)'  # Caso 2: Valor antes do "Crédito Original"
                 #                                         ),
-                #'valor_credito_original_data_entrega': r'(\d{1,3}(?:\.\d{3})*(?:,\d{2}))(?:.*?Selic Acumulada.*?Crédito Original na Data da Entrega|\s*Selic Acumulada)', 
+               'valor_credito_original_data_entrega': r'(?:Crédito Original na Data (?:de|da) Entrega|Crédito Original na Data da Entrega)[\s:]*([\d]{1,3}(?:\.?\d{3})*(?:,\d{2}))',
                 'total_parcelas_composicao_credito': r'(?:(?<=Total das Parcelas de Composição do Crédito\s)[\d.,]+|[\d.,]+(?=\s*Total das Parcelas de Composição do Crédito))',
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
@@ -232,6 +233,8 @@ class RegexRules():
                 'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
                 'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
                 'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
+                'valor_original_credito_origem_credito': r'Valor Original do Crédito\s+([\d.,]+)\b', 
+
 
                 #DARF
                 'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
@@ -272,8 +275,8 @@ class RegexRules():
 
         cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito[\s:]*([\d./-]+)"
         debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
-        grupo_tributo_pattern = r'Grupo\s+de\s+Tributo\s+([A-Za-zÀ-ú\s\-\–]+?)(?=\s*(?:\n|Débito|Período|$))'
-        codigo_receita_pattern = r"Código da Receita/Denominação[\s:-]*(\d{4}-\d{2}\s*-\s*.*?)(?=\s*(?:Grupo de Tributo|$))"
+        grupo_tributo_pattern = r'Grupo\s+de\s+Tributo\s+([^\n]+?)(?=\s*\n|Código|$|\.)'
+        codigo_receita_pattern = r"Código da Receita/Denominação[\s:-]*(\d{4}-\d{2}\s*[\-–]?\s*[^\n]+?)(?=\s*Débito|\n|$)"
         debito_controlado_processo_pattern = r"Débito Controlado em Processo[\s:]*(\b\w+\b)(?=\s*(?:\n|\.|Período|Data|$))"
         periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
         periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
