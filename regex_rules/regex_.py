@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 import calendar
-
+import pdfplumber
 
 class RegexRules():
 
@@ -247,8 +247,8 @@ class RegexRules():
                 'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)",
 
                 #GPS
-                'codigo_pagamento_gps': r"(\d{4})",
-                'data_competencia_gps': r"Data de Competência\s*([\d/]+)",
+                #'codigo_pagamento_gps': r"(\d{4})",
+                #'data_competencia_gps': r"Data de Competência\s*([\d/]+)",
                 #'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)", 
                 #'identificador_detentor_credito_gps': r"Identificador do Detentor do Crédito\s*([\d./-]+)",
 
@@ -294,8 +294,9 @@ class RegexRules():
         
 
         for page_num, patterns in page_patterns.items():
-            if page_num < pdf_document.page_count:
-                page_text = pdf_document[page_num].get_text()
+            if page_num < len(pdf_document.pages):
+                page = pdf_document.pages[page_num]  # Acessando a página corretamente com pdfplumber
+                page_text = page.extract_text()
                 if info.get('tipo_documento') == 'Pedido de Ressarcimento' and page_num == 2:
                     ano_match = re.search(r"Ano\s*(\d{4})", page_text)
                     trimestre_match = re.search(r"(\d{1,2}[º])\s*Trimestre", page_text)
@@ -372,10 +373,9 @@ class RegexRules():
             text = re.sub(r'(?<=\d)\s+(?=\d)', '', text)  
             return text
 
-        for page_num_extra in range(3, pdf_document.page_count):
-            page_text_extra = pdf_document[page_num_extra].get_text()
+        for page_num_extra in range(3, len(pdf_document.pages)):
+            page_text_extra = pdf_document.pages[page_num_extra].extract_text()  # Correção aqui
             page_text_extra = clean_text(page_text_extra)
-            
             # Extrai blocos de débito separadamente
             debito_blocks = re.split(r'\d{3}\.\s+Débito\s+', page_text_extra)[1:]
             
