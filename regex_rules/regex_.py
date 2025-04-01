@@ -283,7 +283,21 @@ class RegexRules():
 
 
         #Credito_data_entrega
-        valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"     
+        valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"  
+
+
+        origem_credito_pattern = {
+            'periodo_apuracao_origem_credito': r'(?i)Período de Apuração\s*(\d{2}/\d{2}/\d{4})',
+            'cnpj_pagamento_origem_credito': r'(?i)CNPJ do Pagamento\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+            'codigo_receita_origem_credito': r'(?i)Código da Receita\s+(\d{4}-\d{2})',
+            'grupo_tributo_origem_credito': r'(?i)Grupo de Tributo\s+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|$))',
+            'data_arrecadacao_origem_credito': r'(?i)Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})',
+            'valor_principal_origem_credito': r'(?i)Valor do Principal\s+([\d.,]+)',
+            'valor_multa_origem_credito': r'(?i)Valor da Multa\s+([\d.,]+)',
+            'valor_juros_origem_credito': r'(?i)Valor dos Juros\s+([\d.,]+)',
+            'valor_total_origem_credito': r'(?i)Valor Total\s+([\d.,]+)',
+            'valor_original_credito_origem_credito': r'(?i)Valor Original do Crédito\s+([\d.,]+)'
+        }   
         
 
         for page_num, patterns in page_patterns.items():
