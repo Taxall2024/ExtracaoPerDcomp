@@ -15,10 +15,10 @@ class Processamento():
             pdf_bytes = uploaded_file.read()
             pdf_stream = io.BytesIO(pdf_bytes)
             with pdfplumber.open(pdf_stream) as pdf_document:
+                # Processa o documento inteiro uma única vez
                 info = RegexRules.extract_info_from_pages(pdf_document)
-                if info:  # Verifica se info é válido
-                    info['Arquivo'] = uploaded_file.name
-                    all_data.append(info)
+                info['Arquivo'] = uploaded_file.name
+                all_data.append(info)  # Uma entrada por arquivo
 
         df = pd.DataFrame(all_data)
 
@@ -50,7 +50,7 @@ class Processamento():
             if coluna in df.columns:
                 df[coluna] = df[coluna].fillna('---')
 
-        #colunas_data = ['data_inicial_periodo', 'data_final_periodo', 'data_transmissao']
+        colunas_data = ['data_inicial_periodo', 'data_final_periodo', 'data_transmissao']
         # for coluna in colunas_data:
         #     if coluna in df.columns:
         #         df[coluna] = pd.to_datetime(df[coluna], format='%d/%m/%Y', errors='coerce')

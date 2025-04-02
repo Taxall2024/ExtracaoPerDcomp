@@ -55,7 +55,76 @@ class LimpezaETratamentoDados():
             (df_explodido["codigos_receita"].str.strip() != "")
         ]
         return df_explodido
-    
+
+    @staticmethod
+    def explodir_origem_credito(df_origem):
+        cols_origem_credito = [
+            'periodo_apuracao_origem_credito',
+            'cnpj_pagamento_origem_credito',
+            'codigo_receita_origem_credito',
+            'grupo_tributo_origem_credito',
+            'data_arrecadacao_origem_credito',
+            'valor_principal_origem_credito',
+            'valor_multa_origem_credito',
+            'valor_juros_origem_credito',
+            'valor_total_origem_credito',
+            'valor_original_credito_origem_credito'
+        ]
+        
+        linhas_expandidas = []
+        
+        for idx, row in df_origem.iterrows():
+            splitted = {}
+            max_len = 1
+            
+            for col in cols_origem_credito:
+                # Verificar se a coluna existe na linha
+                if col not in row:
+                    splitted[col] = []
+                    continue
+                    
+                valor = row[col]
+                
+                # Tratar listas e valores não listados
+                if isinstance(valor, list):
+                    partes = [str(item).strip() for item in valor]
+                else:
+                    if pd.isna(valor) or (valor in ['---', '']):
+                        partes = []
+                    else:
+                        partes = [str(valor).strip()]
+                
+                splitted[col] = partes
+                max_len = max(max_len, len(partes))
+            
+            for i in range(max_len):
+                nova_linha = {'cod_perdcomp': row.get('cod_perdcomp', '')}
+                
+                for col in cols_origem_credito:
+                    valores = splitted[col]
+                    nova_linha[col] = valores[i] if i < len(valores) else ''
+                
+                linhas_expandidas.append(nova_linha)
+        
+        df_explodido = pd.DataFrame(linhas_expandidas)
+        
+        # Filtrar linhas com código de receita válido
+        df_explodido = df_explodido[
+            df_explodido["codigo_receita_origem_credito"].str.strip().ne("")
+        ]
+        
+        # Converter colunas numéricas
+        colunas_numericas = [col for col in cols_origem_credito if 'valor_' in col]
+        for col in colunas_numericas:
+            df_explodido[col] = (
+                df_explodido[col]
+                .str.replace('.', '', regex=False)
+                .str.replace(',', '.', regex=False)
+                .astype(float, errors='ignore')
+            )
+        
+        return df_explodido
+        
     @staticmethod
     def criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4):
         """
