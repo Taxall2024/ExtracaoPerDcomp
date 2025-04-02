@@ -51,9 +51,9 @@ class Processamento():
                 df[coluna] = df[coluna].fillna('---')
 
         colunas_data = ['data_inicial_periodo', 'data_final_periodo', 'data_transmissao']
-        for coluna in colunas_data:
-            if coluna in df.columns:
-                df[coluna] = pd.to_datetime(df[coluna], format='%d/%m/%Y', errors='coerce')
+        # for coluna in colunas_data:
+        #     if coluna in df.columns:
+        #         df[coluna] = pd.to_datetime(df[coluna], format='%d/%m/%Y', errors='coerce')
 
         return df
 
