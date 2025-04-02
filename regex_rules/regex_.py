@@ -202,10 +202,9 @@ class RegexRules():
 
         # [NOVO] Processa Origem do Crédito
         # [NOVO] Processa Origem do Crédito
-        origem_data = extract_origem_credito(full_text)
-        if origem_data:
-            for key in origem_credito_pattern.keys():
-                info[key].extend(origem_data[key])
+        origem_data = extract_origem_credito(full_text) or {key: [] for key in origem_credito_pattern.keys()}
+        for key in origem_credito_pattern.keys():
+            info[key].extend(origem_data[key])
 
         page_patterns = {
             0: {
@@ -411,5 +410,11 @@ class RegexRules():
         origem_credito_keys = set(origem_credito_pattern.keys())
 
         for key, value in info.items():
-            if isinstance(value, list) and key not in origem_credito_keys:
-                info[key] = ";".join(value) if value else None
+            if isinstance(value, list):
+                if key not in origem_credito_keys:
+                    info[key] = ";".join(value) if value else None
+                else:
+                    # Mantém como lista, mesmo se vazia
+                    info[key] = value if value else []
+
+        return info  # Garantir que isso está no final
