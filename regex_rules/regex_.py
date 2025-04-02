@@ -192,16 +192,14 @@ class RegexRules():
                         if match:
                             resultados[campo].append(match.group(1).strip())
                         else:
-                            resultados[campo].append('---')  # Valor padrão para ausência
+                            resultados[campo].append('---')  
             return resultados
 
-        # Processamento principal
+        
         full_text = ""
         for page in pdf_document.pages:
             full_text += page.extract_text() + "\n"
 
-        # [NOVO] Processa Origem do Crédito
-        # [NOVO] Processa Origem do Crédito
         origem_data = extract_origem_credito(full_text) or {key: [] for key in origem_credito_pattern.keys()}
         for key in origem_credito_pattern.keys():
             info[key].extend(origem_data[key])
