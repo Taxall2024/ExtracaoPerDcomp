@@ -74,37 +74,15 @@ class LimpezaETratamentoDados():
         linhas_expandidas = []
         
         for idx, row in df_origem.iterrows():
-            splitted = {}
-            max_len = 1
-            
+            nova_linha = {'cod_perdcomp': row.get('cod_perdcomp', '')}
             for col in cols_origem_credito:
-                # Verificar se a coluna existe na linha
-                if col not in row:
-                    splitted[col] = []
-                    continue
-                    
-                valor = row[col]
-                
-                # Tratar listas e valores não listados
+                valor = row.get(col, '')
+                # Tratar listas ou strings
                 if isinstance(valor, list):
-                    partes = [str(item).strip() for item in valor]
+                    nova_linha[col] = valor[0] if len(valor) > 0 else ''
                 else:
-                    if pd.isna(valor) or (valor in ['---', '']):
-                        partes = []
-                    else:
-                        partes = [str(valor).strip()]
-                
-                splitted[col] = partes
-                max_len = max(max_len, len(partes))
-            
-            for i in range(max_len):
-                nova_linha = {'cod_perdcomp': row.get('cod_perdcomp', '')}
-                
-                for col in cols_origem_credito:
-                    valores = splitted[col]
-                    nova_linha[col] = valores[i] if i < len(valores) else ''
-                
-                linhas_expandidas.append(nova_linha)
+                    nova_linha[col] = valor if pd.notna(valor) and valor != '---' else ''
+            linhas_expandidas.append(nova_linha)
         
         df_explodido = pd.DataFrame(linhas_expandidas)
         
@@ -118,9 +96,10 @@ class LimpezaETratamentoDados():
         for col in colunas_numericas:
             df_explodido[col] = (
                 df_explodido[col]
+                .replace('', '0')
                 .str.replace('.', '', regex=False)
                 .str.replace(',', '.', regex=False)
-                .astype(float, errors='ignore')
+                .astype(float)
             )
         
         return df_explodido

@@ -171,38 +171,33 @@ class RegexRules():
             'periodo_apuracao_origem_credito': r'(?i)Período de Apuração\s*(\d{2}/\d{2}/\d{4})',
             'cnpj_pagamento_origem_credito': r'(?i)CNPJ do Pagamento\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
             'codigo_receita_origem_credito': r'(?i)Código da Receita\s+(\d{4}-\d{2})',
-            'grupo_tributo_origem_credito': r'(?i)Grupo de Tributo\s+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|$))',
+            'grupo_tributo_origem_credito': r'(?i)Grupo de Tributo\s+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|Data|$))',
             'data_arrecadacao_origem_credito': r'(?i)Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})',
             'valor_principal_origem_credito': r'(?i)Valor do Principal\s+([\d.,]+)',
             'valor_multa_origem_credito': r'(?i)Valor da Multa\s+([\d.,]+)',
             'valor_juros_origem_credito': r'(?i)Valor dos Juros\s+([\d.,]+)',
             'valor_total_origem_credito': r'(?i)Valor Total\s+([\d.,]+)',
             'valor_original_credito_origem_credito': r'(?i)Valor Original do Crédito\s+([\d.,]+)'
-        }  
+        }
 
         def extract_origem_credito(text):
-            """Extrai múltiplos blocos de Origem do Crédito"""
+            """Extrai múltiplos blocos de Origem do Crédito, garantindo alinhamento por bloco."""
             resultados = {key: [] for key in origem_credito_pattern.keys()}
-            blocos = re.split(r'\n\d+\.', text)
+            # Ajustar regex para capturar blocos iniciados por número seguido de ponto e espaço
+            blocos = re.split(r'\n(\d+\.)\s*', text)
+            blocos = [bloco.strip() for bloco in blocos if bloco.strip() and not bloco.strip().isdigit()]
             
             for bloco in blocos:
-                if 'ORIGEM DO CRÉDITO' in bloco.upper() or 'Período de Apuração' in bloco:
+                if 'ORIGEM DO CRÉDITO' in bloco.upper():
+                    # Processar cada campo no bloco atual
+                    temp = {}
                     for campo, pattern in origem_credito_pattern.items():
                         match = re.search(pattern, bloco)
-                        if match:
-                            resultados[campo].append(match.group(1).strip())
-                        else:
-                            resultados[campo].append('---')  
+                        temp[campo] = match.group(1).strip() if match else ''
+                    # Adicionar todos os campos ao resultado, mesmo vazios
+                    for campo in origem_credito_pattern.keys():
+                        resultados[campo].append(temp.get(campo, ''))
             return resultados
-
-        
-        full_text = ""
-        for page in pdf_document.pages:
-            full_text += page.extract_text() + "\n"
-
-        origem_data = extract_origem_credito(full_text) or {key: [] for key in origem_credito_pattern.keys()}
-        for key in origem_credito_pattern.keys():
-            info[key].extend(origem_data[key])
 
         page_patterns = {
             0: {
@@ -289,7 +284,7 @@ class RegexRules():
             },
         }
 
-        cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito[\s:]*([\d./-]+)"
+        cnpj_detentor_debito_pattern = r'CNPJ\s+do\s+Detentor\s+do\s+Débito[\s:]*([\d./-]+)'
         debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
         grupo_tributo_pattern = r'Grupo\s+de\s+Tributo\s+([^\n]+?)(?=\s*\n|Código|$|\.)'
         codigo_receita_pattern = r"Código da Receita/Denominação[\s:-]*(\d{4}-\d{2}\s*[\-–]?\s*[^\n]+?)(?=\s*Débito|\n|$)"
@@ -306,11 +301,7 @@ class RegexRules():
         valor_multa_tributo_pattern = r"(?i)Multa[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
         valor_juros_tributo_pattern = r"(?i)Juros[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
         valor_total_tributo_pattern = r"(?i)(?:Total\s+do\s+Tributo|Total)[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
-        #valor_total_geral_pattern = r"(?i)TOTAL[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
 
-
-        #Credito_data_entrega
-        valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"  
 
 
         for page_num, patterns in page_patterns.items():
@@ -336,11 +327,6 @@ class RegexRules():
                         elif key not in ['nome_responsavel_preenchimento', 'cod_cpf_preenchimento']:
                             info[key] = matches[0].strip()
 
-
-                # valor_credito_data_transmissao
-                match_credito_transmissao = re.search(valor_credito_transmissao_pattern, page_text)
-                if match_credito_transmissao:
-                    info['valor_credito_original_data_entrega'] = match_credito_transmissao.group(1)
 
                 if info.get('tipo_documento'):
                     if info['tipo_documento'] in ['Pedido de Restituição', 'Declaração de Compensação', 'Pedido de Ressarcimento']:
