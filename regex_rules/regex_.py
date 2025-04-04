@@ -169,35 +169,44 @@ class RegexRules():
         }
 
         origem_credito_pattern = {
-            'periodo_apuracao_origem_credito': r'(?i)Período de Apuração\s*(\d{2}/\d{2}/\d{4})',
-            'cnpj_pagamento_origem_credito': r'(?i)CNPJ do Pagamento\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
-            'codigo_receita_origem_credito': r'(?i)Código da Receita\s+(\d{4}-\d{2})',
-            'grupo_tributo_origem_credito': r'(?i)Grupo de Tributo\s+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|Data|$))',
-            'data_arrecadacao_origem_credito': r'(?i)Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})',
-            'valor_principal_origem_credito': r'(?i)Valor do Principal\s+([\d.,]+)',
-            'valor_multa_origem_credito': r'(?i)Valor da Multa\s+([\d.,]+)',
-            'valor_juros_origem_credito': r'(?i)Valor dos Juros\s+([\d.,]+)',
-            'valor_total_origem_credito': r'(?i)Valor Total\s+([\d.,]+)',
-            'valor_original_credito_origem_credito': r'(?i)Valor Original do Crédito\s+([\d.,]+)'
-        }
-
+            'periodo_apuracao_origem_credito': r'(?i)Período de Apuração[\s:]*(\d{2}/\d{2}/\d{4})',
+            'cnpj_pagamento_origem_credito': r'(?i)CNPJ do Pagamento[\s:]*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+            'codigo_receita_origem_credito': r'(?i)Código da Receita[\s:]+(\d{4}-\d{2})',
+            'grupo_tributo_origem_credito': r'(?i)Grupo de Tributo[\s:]+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|Data|$))',
+            'data_arrecadacao_origem_credito': r'(?i)Data de Arrecadação[\s:]*(\d{2}/\d{2}/\d{4})',
+            'valor_principal_origem_credito': r'(?i)Valor do Principal[\s:]*([\d.,]+)',
+            'valor_multa_origem_credito': r'(?i)Valor da Multa[\s:]*([\d.,]+)',
+            'valor_juros_origem_credito': r'(?i)Valor dos Juros[\s:]*([\d.,]+)',
+            'valor_total_origem_credito': r'(?i)Valor Total[\s:]*([\d.,]+)',
+            'valor_original_credito_origem_credito': r'(?i)Valor Original do Crédito[\s:]*([\d.,]+)'
+}
         def extract_origem_credito(text):
-            """Extrai múltiplos blocos de Origem do Crédito, garantindo alinhamento por bloco."""
+            """Extrai múltiplos blocos de Origem do Crédito com melhor detecção"""
             resultados = {key: [] for key in origem_credito_pattern.keys()}
-            # Ajustar regex para capturar blocos iniciados por número seguido de ponto e espaço
-            blocos = re.split(r'\n(\d+\.)\s*', text)
-            blocos = [bloco.strip() for bloco in blocos if bloco.strip() and not bloco.strip().isdigit()]
+            
+            # Usar lookbehind para capturar números de bloco mais eficientemente
+            blocos = re.split(r'(?i)(?=\d+\.\s*ORIGEM DO CRÉDITO)', text)
             
             for bloco in blocos:
-                if 'ORIGEM DO CRÉDITO' in bloco.upper():
-                    # Processar cada campo no bloco atual
+                if re.search(r'(?i)\d+\.\s*ORIGEM DO CRÉDITO', bloco):
                     temp = {}
                     for campo, pattern in origem_credito_pattern.items():
                         match = re.search(pattern, bloco)
-                        temp[campo] = match.group(1).strip() if match else ''
-                    # Adicionar todos os campos ao resultado, mesmo vazios
+                        if match:
+                            # Tratamento especial para datas e valores
+                            value = match.group(1).strip()
+                            if 'data' in campo:
+                                value = RegexRules.tratar_data_competencia(value)
+                            elif 'valor' in campo:
+                                value = RegexRules.extrair_valor_numerico(value)
+                            temp[campo] = value
+                        else:
+                            temp[campo] = None
+                    
+                    # Adicionar todos os campos ao resultado
                     for campo in origem_credito_pattern.keys():
-                        resultados[campo].append(temp.get(campo, ''))
+                        resultados[campo].append(temp.get(campo))
+            
             return resultados
 
         page_patterns = {
