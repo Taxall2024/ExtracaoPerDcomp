@@ -127,7 +127,16 @@ def main():
             'valor_multa_darf',
             'valor_juros_darf',
             'valor_total_darf',
-            'valor_original_credito_darf'
+            'valor_original_credito_darf',
+             'codigo_pagamento_gps',
+            'data_competencia_gps',
+            'periodo_apuracao_gps',
+            'identificador_detentor_credito_gps',
+            'data_arrecadacao_gps',
+            'valor_inss_gps',
+            'valor_outras_entidades_gps',
+            'valor_atm_multa_juros_gps',
+            'valor_total_gps',
 
         ]
 

@@ -112,6 +112,7 @@ class RegexRules():
             'total_parcelas_composicao_credito': None, 
             'valor_disponivel_para_restituicao_apurado_documento_inicial': None,
             'valor_original_credito_utilizado_compensacoes_gfip': None,
+            'valor_original_credito_disponivel': None,
             'imposto_devido': None,
             'valor_credito_passivel_restituicao': None,
             'grupo_tributo': [],
@@ -161,7 +162,7 @@ class RegexRules():
             'identificador_detentor_credito_gps': [],
             'data_arrecadacao_gps': [],
             'valor_inss_gps': [],
-            'valor_otras_entidades_gps': [],
+            'valor_outras_entidades_gps': [],
             'valor_atm_multa_juros_gps': [],
             'valor_total_gps': [],
             
@@ -245,8 +246,8 @@ class RegexRules():
                 'valor_total_debitos_desta_dcomp': r"Total dos débitos desta DCOMP[\s\S]*?(\d{1,3}(?:\.\d{3})*,\d{2})",
                 'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original [Uu]tilizado nesta DCOMP\s*([\d.,]+)",
                 'csll_devida': r"\sCSLL Devida\s([\d.,]+)\s*",
-                'valor_disponivel_para_restituicao_apurado_documento_inicial': r'Valor Disponível para Restituição Apurado no\s*Documento Inicial\s*([\d.,]+)\s*',
-                'valor_original_credito_utilizado_compensacoes_gfip': r"\s*([\d.,]+)\sValor Original do Crédito [Uu]tilizado em\s*Compensações em GFIP",
+                'valor_disponivel_para_restituicao_apurado_documento_inicial': r'(?i)Valor\s+Disponível\s+para\s+Restituição\s+Apurado\s+no.*?(\d{1,3}(?:\.\d{3})*,\d{2}).*?Documento\s+Inicial',
+                'valor_original_credito_utilizado_compensacoes_gfip': r'(?i)Valor\s+Original\s+do\s+Crédito\s+Utilizado\s+em.*?(\d{1,3}(?:\.\d{3})*,\d{2}).*?Compensações\s+em\s+GFIP',
                 'valor_credito_passivel_restituicao': r"Crédito Passível de Restituição\s*([\d.,]+)",
 
 
@@ -277,10 +278,19 @@ class RegexRules():
                 'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)",
 
                 #GPS
-                #'codigo_pagamento_gps': r"(\d{4})",
-                #'data_competencia_gps': r"Data de Competência\s*([\d/]+)",
-                #'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)", 
-                #'identificador_detentor_credito_gps': r"Identificador do Detentor do Crédito\s*([\d./-]+)",
+                'codigo_pagamento_gps':   r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
+                'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
+                'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+                'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)", 
+                'valor_inss_gps': r'(?i)Valor\s+do\s+INSS\s+([\d\.,]+)',
+                'valor_outras_entidades_gps': r'(?i)Valor\s+de\s+Outras\s+Entidades\s+([\d\.,]+)',
+                'valor_atm_multa_juros_gps': r'(?i)Valor\s+de\s+ATM,\s+Multa\s+e\s+Juros\s+([\d\.,]+)',
+                'valor_total_gps': r'(?i)Valor\s+Total\s+da\s+GPS\s+([\d\.,]+)',
+                'data_arrecadacao_gps': r'(?i)Data\s+da\s+Arrecadação\s+(\d{2}/\d{2}/\d{4})',
+                
+
+
+                
             },
         }
 
@@ -301,6 +311,8 @@ class RegexRules():
         valor_multa_tributo_pattern = r"(?i)Multa[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
         valor_juros_tributo_pattern = r"(?i)Juros[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
         valor_total_tributo_pattern = r"(?i)(?:Total\s+do\s+Tributo|Total)[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
+
+
 
 
 
@@ -346,6 +358,8 @@ class RegexRules():
                             info['cod_perdcomp_cancelado'] = cod_per_origem_match.group(1).strip()
                         else:
                             info['cod_perdcomp_inicial'] = cod_per_origem_match.group(1).strip()
+
+        
 
         patterns_pags_extras = {
             'cnpj_detentor_debito': cnpj_detentor_debito_pattern,
