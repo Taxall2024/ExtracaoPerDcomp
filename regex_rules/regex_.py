@@ -369,7 +369,6 @@ class RegexRules():
                             info['cod_perdcomp_inicial'] = cod_per_origem_match.group(1).strip()
 
         
-
         patterns_pags_extras = {
             'cnpj_detentor_debito': cnpj_detentor_debito_pattern,
             'codigos_receita': codigo_receita_pattern,
@@ -414,8 +413,17 @@ class RegexRules():
                             value = re.sub(r'\s+', ' ', value).replace('- ', '-')
                         info[key].append(value)
         
+        
 
         origem_credito_keys = set(origem_credito_pattern.keys())
+
+        for page_num in range(len(pdf_document.pages)):
+            page_text = pdf_document.pages[page_num].extract_text()
+            origem_credito_data = extract_origem_credito(page_text)
+            
+            # Atualizar o dicionário info com os resultados
+            for key in origem_credito_pattern.keys():
+                info[key].extend(origem_credito_data.get(key, []))
 
         for key, value in info.items():
             if isinstance(value, list):
