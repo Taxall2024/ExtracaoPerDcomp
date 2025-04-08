@@ -70,39 +70,52 @@ class LimpezaETratamentoDados():
             'valor_total_origem_credito',
             'valor_original_credito_origem_credito'
         ]
-        
+
         linhas_expandidas = []
-        
-        for idx, row in df_origem.iterrows():
-            nova_linha = {'cod_perdcomp': row.get('cod_perdcomp', '')}
+
+        for _, row in df_origem.iterrows():
+            # Extrair listas ou valores únicos
+            max_len = 1
+            valores_colunas = {}
+
             for col in cols_origem_credito:
                 valor = row.get(col, '')
-                # Tratar listas ou strings
                 if isinstance(valor, list):
-                    nova_linha[col] = ";".join(valor)
+                    valores_colunas[col] = valor
+                    max_len = max(max_len, len(valor))
                 else:
-                    nova_linha[col] = valor if pd.notna(valor) and valor != '---' else ''
-            linhas_expandidas.append(nova_linha)
-        
+                    valores_colunas[col] = [valor]  # transforma em lista para manter consistência
+
+            for i in range(max_len):
+                nova_linha = {'cod_perdcomp': row.get('cod_perdcomp', '')}
+                for col in cols_origem_credito:
+                    valores = valores_colunas.get(col, [])
+                    nova_linha[col] = valores[i] if i < len(valores) else ''
+                linhas_expandidas.append(nova_linha)
+
         df_explodido = pd.DataFrame(linhas_expandidas)
-        
+
         # Filtrar linhas com código de receita válido
         df_explodido = df_explodido[
-            df_explodido["codigo_receita_origem_credito"].str.strip().ne("")
+            df_explodido["codigo_receita_origem_credito"].notna() &
+            (df_explodido["codigo_receita_origem_credito"].astype(str).str.strip() != "")
         ]
-        
+
         # Converter colunas numéricas
         colunas_numericas = [col for col in cols_origem_credito if 'valor_' in col]
         for col in colunas_numericas:
-            df_explodido[col] = (
-                df_explodido[col]
-                .replace('', '0')
-                .str.replace('.', '', regex=False)
-                .str.replace(',', '.', regex=False)
-                .astype(float)
-            )
-        
+           df_explodido[col] = (
+            df_explodido[col]
+            .fillna('0')  # Preenche valores None com '0'
+            .replace('', '0')  # Garante que strings vazias também sejam '0'
+            #.astype(str)
+            #.str.replace('.', '', regex=False)
+            #.str.replace(',', '.', regex=False).astype(str).str.replace('.', ',', regex=False)
+        )
+
+
         return df_explodido
+
         
     @staticmethod
     def criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4):

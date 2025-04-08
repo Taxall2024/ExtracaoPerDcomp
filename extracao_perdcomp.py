@@ -147,8 +147,9 @@ def main():
 
       # Explodir Tabela2 (múltiplas linhas viram colunas numeradas)
         df_tabela2_explodida = LimpezaETratamentoDados.explodir_tabela2(df_tabela2)
-        #df_tabela3 = LimpezaETratamentoDados.explodir_origem_credito(df_tabela3)
+        df_tabela3 = LimpezaETratamentoDados.explodir_origem_credito(df_tabela3)
         df_tabela3, df_tabela4 = LimpezaETratamentoDados.limpar_tabelas_3_e_4(df_tabela3, df_tabela4)
+
 
         #Substituir '.' por ',' nas colunas de tributos na Tabela2 explodida
         tributo_cols = ['valor_principal_tributo', 'valor_multa_tributo', 'valor_juros_tributo', 'valor_total_tributo']
