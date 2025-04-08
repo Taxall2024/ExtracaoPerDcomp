@@ -391,24 +391,27 @@ class RegexRules():
             text = re.sub(r'(?<=\d)\s+(?=\d)', '', text)  
             return text
 
+
+        texto_paginas_extras = ""
         for page_num_extra in range(3, len(pdf_document.pages)):
-            page_text_extra = pdf_document.pages[page_num_extra].extract_text()  # Correção aqui
-            page_text_extra = clean_text(page_text_extra)
-            # Extrai blocos de débito separadamente
-            debito_blocks = re.split(r'\n?(?=\d{3}\.\s+Débito\s+)', page_text_extra)
-            debito_blocks = [b for b in debito_blocks if "Débito" in b]
+            texto_paginas_extras += "\n" + pdf_document.pages[page_num_extra].extract_text()
 
-            
-            for block in debito_blocks:
-                for key, pattern in patterns_pags_extras.items():
-                    matches = re.findall(pattern, block, flags)
-                    for match in matches:
-                        value = match.strip() if isinstance(match, str) else match[0].strip()
-                        if key == 'codigos_receita':
-                            value = re.sub(r'\s+', ' ', value).replace('- ', '-')
-                        info[key].append(value)
+        texto_paginas_extras = clean_text(texto_paginas_extras)
 
-        
+
+        debito_blocks = re.split(r'(?=\d{3}\.\s+Débito\s+)', texto_paginas_extras)
+        debito_blocks = [b for b in debito_blocks if "Débito" in b]
+
+
+        for block in debito_blocks:
+            for key, pattern in patterns_pags_extras.items():
+                matches = re.findall(pattern, block, flags)
+                for match in matches:
+                    value = match.strip() if isinstance(match, str) else match[0].strip()
+                    if key == 'codigos_receita':
+                        value = re.sub(r'\s+', ' ', value).replace('- ', '-')
+                    info[key].append(value)
+
         
         origem_credito_keys = set(origem_credito_pattern.keys())
 
