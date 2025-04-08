@@ -208,11 +208,6 @@ class RegexRules():
         }
 
 
-
-
-
-
-
         def extract_origem_credito(text):
             """
             Extrai múltiplos blocos de Origem do Crédito com base em '1.Período de Apuração', '2.Período...' etc.
@@ -430,8 +425,6 @@ class RegexRules():
             texto_paginas_extras += "\n" + pdf_document.pages[page_num_extra].extract_text()
 
         texto_paginas_extras = clean_text(texto_paginas_extras)
-
-
         debito_blocks = re.split(r'(?=\d{3}\.\s+Débito\s+)', texto_paginas_extras)
         debito_blocks = [b for b in debito_blocks if "Débito" in b]
 
@@ -447,7 +440,6 @@ class RegexRules():
 
         
         origem_credito_keys = set(origem_credito_pattern.keys())
-
         texto_completo = "\n".join(page.extract_text() for page in pdf_document.pages)
         origem_credito_data = extract_origem_credito(texto_completo)
 
@@ -460,7 +452,6 @@ class RegexRules():
                 if key not in origem_credito_keys:
                     info[key] = ";".join(value) if value else None
                 else:
-                    # Mantém como lista, mesmo se vazia
                     info[key] = value if value else []
 
-        return info  # Garantir que isso está no final
+        return info  
