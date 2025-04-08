@@ -202,10 +202,6 @@ class RegexRules():
                     match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
                     if match:
                         value = match.group(1).strip()
-                        if 'data' in campo:
-                            value = RegexRules.tratar_data_competencia(value)
-                        elif 'valor' in campo:
-                            value = RegexRules.extrair_valor_numerico(value)
                         temp[campo] = value
                     else:
                         temp[campo] = None
@@ -221,9 +217,6 @@ class RegexRules():
             0: {
                 'cod_cnpj': r"CNPJ \s*([\d./-]+)",
                 'cod_perdcomp': r"CNPJ \s*[\d./-]+\s*([\d.]+-[\d.]+)",
-
-                #'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:\s*(?:LTDA|ME|EIRELI|SA)\b|$))",
-                #'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:\s(?:LTDA|ME|EIRELI|SA)\b)?)",
                 'nome_cliente': r"Nome Empresarial\s*(.+)",
 
                 'data_transmissao': r"Data de Transmissão\s*([\d/]+)",
