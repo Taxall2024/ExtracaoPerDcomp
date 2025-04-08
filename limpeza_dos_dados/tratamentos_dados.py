@@ -79,7 +79,7 @@ class LimpezaETratamentoDados():
                 valor = row.get(col, '')
                 # Tratar listas ou strings
                 if isinstance(valor, list):
-                    nova_linha[col] = valor[0] if len(valor) > 0 else ''
+                    nova_linha[col] = ";".join(valor)
                 else:
                     nova_linha[col] = valor if pd.notna(valor) and valor != '---' else ''
             linhas_expandidas.append(nova_linha)

@@ -181,37 +181,41 @@ class RegexRules():
             'valor_original_credito_origem_credito': r'(?i)Valor\s+Original\s+do\s+Crédito[\s:]*([\d.,]+)'
 }
         def extract_origem_credito(text):
-            """Extrai múltiplos blocos de Origem do Crédito com tratamento de espaços"""
+            """
+            Extrai múltiplos blocos de Origem do Crédito com base em '1.Período de Apuração', '2.Período...' etc.
+            """
             resultados = {key: [] for key in origem_credito_pattern.keys()}
-            
-            # Normalizar espaços e quebras de linha
-            text = re.sub(r'\s+', ' ', text)  # Remove múltiplos espaços e quebras
-            
-            # Dividir em blocos usando o número sequencial (ex: "1.ORIGEM...")
-            blocos = re.split(r'(?i)(?=\d+\.\s*ORIGEM\s+DO\s+CRÉDITO)', text)
-            
+
+            # Normalizar texto
+            text = re.sub(r'[ \t]+', ' ', text)
+            text = re.sub(r'\n+', '\n', text)
+
+            # Dividir por blocos que começam com número + "Período de Apuração"
+            blocos = re.split(r'(?=\d+\.\s*Período de Apuração)', text, flags=re.IGNORECASE)
+
             for bloco in blocos:
-                if re.search(r'(?i)\d+\.\s*ORIGEM\s+DO\s+CRÉDITO', bloco):
-                    temp = {}
-                    for campo, pattern in origem_credito_pattern.items():
-                        match = re.search(pattern, bloco)
-                        if match:
-                            value = match.group(1).strip()
-                            # Tratamento especial para dados
-                            if 'data' in campo:
-                                value = RegexRules.tratar_data_competencia(value)
-                            elif 'valor' in campo:
-                                value = RegexRules.extrair_valor_numerico(value)
-                            temp[campo] = value
-                        else:
-                            temp[campo] = None
-                    
-                    # Adicionar apenas se todos os campos essenciais estiverem presentes
-                    if temp['periodo_apuracao_origem_credito']:  # Ajuste conforme necessário
-                        for key in origem_credito_pattern.keys():
-                            resultados[key].append(temp[key])
-            
+                if not re.search(r'Período de Apuração', bloco, flags=re.IGNORECASE):
+                    continue
+
+                temp = {}
+                for campo, pattern in origem_credito_pattern.items():
+                    match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
+                    if match:
+                        value = match.group(1).strip()
+                        if 'data' in campo:
+                            value = RegexRules.tratar_data_competencia(value)
+                        elif 'valor' in campo:
+                            value = RegexRules.extrair_valor_numerico(value)
+                        temp[campo] = value
+                    else:
+                        temp[campo] = None
+
+                if temp['periodo_apuracao_origem_credito']:  # Campo obrigatório
+                    for key in origem_credito_pattern:
+                        resultados[key].append(temp[key])
+
             return resultados
+
 
         page_patterns = {
             0: {
@@ -398,7 +402,9 @@ class RegexRules():
             page_text_extra = pdf_document.pages[page_num_extra].extract_text()  # Correção aqui
             page_text_extra = clean_text(page_text_extra)
             # Extrai blocos de débito separadamente
-            debito_blocks = re.split(r'\d{3}\.\s+Débito\s+', page_text_extra)[1:]
+            debito_blocks = re.split(r'\n?(?=\d{3}\.\s+Débito\s+)', page_text_extra)
+            debito_blocks = [b for b in debito_blocks if "Débito" in b]
+
             
             for block in debito_blocks:
                 for key, pattern in patterns_pags_extras.items():
