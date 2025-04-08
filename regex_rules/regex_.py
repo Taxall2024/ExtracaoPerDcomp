@@ -179,7 +179,40 @@ class RegexRules():
             'valor_juros_origem_credito': r'(?i)Valor\s+dos\s+Juros[\s:]*([\d.,]+)',
             'valor_total_origem_credito': r'(?i)Valor\s+Total[\s:]*([\d.,]+)',
             'valor_original_credito_origem_credito': r'(?i)Valor\s+Original\s+do\s+Crédito[\s:]*([\d.,]+)'
+        }
+
+        darf_pattern = {
+        'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)",
+        'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s",
+        'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
+        'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)",
+        'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)",
+        'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)",
+        'valor_principal_darf': r"Valor do Principal\s*([\d.,]+)",
+        'valor_multa_darf': r"Valor da Multa\s*([\d.,]+)",
+        'valor_juros_darf': r"Valor dos Juros\s*([\d.,]+)",
+        'valor_total_darf': r"Valor Total do DARF\s*([\d.,]+)",
+        'valor_original_credito_darf': r"Valor Original do Crédito\s*([\d.,]+)",
 }
+
+        gps_pattern = {
+        'codigo_pagamento_gps': r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
+        'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
+        'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+        'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)",
+        'data_arrecadacao_gps': r'(?i)Data\s+da\s+Arrecadação\s+(\d{2}/\d{2}/\d{4})',
+        'valor_inss_gps': r'(?i)Valor\s+do\s+INSS\s+([\d\.,]+)',
+        'valor_outras_entidades_gps': r'(?i)Valor\s+de\s+Outras\s+Entidades\s+([\d\.,]+)',
+        'valor_atm_multa_juros_gps': r'(?i)Valor\s+de\s+ATM,\s+Multa\s+e\s+Juros\s+([\d\.,]+)',
+        'valor_total_gps': r'(?i)Valor\s+Total\s+da\s+GPS\s+([\d\.,]+)',
+        }
+
+
+
+
+
+
+
         def extract_origem_credito(text):
             """
             Extrai múltiplos blocos de Origem do Crédito com base em '1.Período de Apuração', '2.Período...' etc.
@@ -275,28 +308,28 @@ class RegexRules():
 
 
                 #DARF
-                'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
-                'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s", 
-                'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
-                'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)\s", 
-                'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
-                'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
-                'valor_principal_darf': r"DARF NUMERDADO*?\sData\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
-                'valor_multa_darf': r"DARF NUMERDADO*?\sValor da Multa\s*([\d.,]+)", 
-                'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
-                'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
-                'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)",
+                # 'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
+                # 'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s", 
+                # 'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
+                # 'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)\s", 
+                # 'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
+                # 'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
+                # 'valor_principal_darf': r"DARF NUMERDADO*?\sData\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
+                # 'valor_multa_darf': r"DARF NUMERDADO*?\sValor da Multa\s*([\d.,]+)", 
+                # 'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
+                # 'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
+                # 'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)",
 
                 #GPS
-                'codigo_pagamento_gps':   r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
-                'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
-                'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
-                'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)", 
-                'valor_inss_gps': r'(?i)Valor\s+do\s+INSS\s+([\d\.,]+)',
-                'valor_outras_entidades_gps': r'(?i)Valor\s+de\s+Outras\s+Entidades\s+([\d\.,]+)',
-                'valor_atm_multa_juros_gps': r'(?i)Valor\s+de\s+ATM,\s+Multa\s+e\s+Juros\s+([\d\.,]+)',
-                'valor_total_gps': r'(?i)Valor\s+Total\s+da\s+GPS\s+([\d\.,]+)',
-                'data_arrecadacao_gps': r'(?i)Data\s+da\s+Arrecadação\s+(\d{2}/\d{2}/\d{4})',
+                # 'codigo_pagamento_gps':   r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
+                # 'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
+                # 'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+                # 'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)", 
+                # 'valor_inss_gps': r'(?i)Valor\s+do\s+INSS\s+([\d\.,]+)',
+                # 'valor_outras_entidades_gps': r'(?i)Valor\s+de\s+Outras\s+Entidades\s+([\d\.,]+)',
+                # 'valor_atm_multa_juros_gps': r'(?i)Valor\s+de\s+ATM,\s+Multa\s+e\s+Juros\s+([\d\.,]+)',
+                # 'valor_total_gps': r'(?i)Valor\s+Total\s+da\s+GPS\s+([\d\.,]+)',
+                # 'data_arrecadacao_gps': r'(?i)Data\s+da\s+Arrecadação\s+(\d{2}/\d{2}/\d{4})',
                 
             },
         }
