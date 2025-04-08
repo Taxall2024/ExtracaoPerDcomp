@@ -306,7 +306,7 @@ class RegexRules():
         cnpj_detentor_debito_pattern = r'CNPJ\s+do\s+Detentor\s+do\s+Débito[\s:]*([\d./-]+)'
         debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
         grupo_tributo_pattern = r'Grupo\s+de\s+Tributo\s+([^\n]+?)(?=\s*\n|Código|$|\.)'
-        codigo_receita_pattern = r"Código da Receita/Denominação[\s:-]*(\d{4}-\d{2}\s*[\-–]?\s*[^\n]+?)(?=\s*Débito|\n|$)"
+        codigo_receita_pattern = r"Código da Receita/Denominação[\s:-]*(.*?)(?=\s*Débito Controlado em Processo)"
         debito_controlado_processo_pattern = r"Débito Controlado em Processo[\s:]*(\b\w+\b)(?=\s*(?:\n|\.|Período|Data|$))"
         periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
         periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
@@ -419,11 +419,32 @@ class RegexRules():
 
         for page_num in range(len(pdf_document.pages)):
             page_text = pdf_document.pages[page_num].extract_text()
-            origem_credito_data = extract_origem_credito(page_text)
-            
-            # Atualizar o dicionário info com os resultados
-            for key in origem_credito_pattern.keys():
-                info[key].extend(origem_credito_data.get(key, []))
+            if not page_text:
+                continue
+
+            page_text = clean_text(page_text)  # Use a mesma função de limpeza usada nos débitos
+
+            # Detectar e extrair blocos de origem do crédito
+            origem_credito_blocos = re.split(r'(?=\d+\.\s*ORIGEM DO CRÉDITO)', page_text, flags=re.IGNORECASE)
+
+            for bloco in origem_credito_blocos:
+                if re.search(r'(?i)\d+\.\s*ORIGEM DO CRÉDITO', bloco):
+                    temp = {}
+                    for campo, pattern in origem_credito_pattern.items():
+                        match = re.search(pattern, bloco)
+                        if match:
+                            valor = match.group(1).strip()
+                            if 'data' in campo:
+                                valor = RegexRules.tratar_data_competencia(valor)
+                            elif 'valor' in campo:
+                                valor = RegexRules.extrair_valor_numerico(valor)
+                            temp[campo] = valor
+                        else:
+                            temp[campo] = None
+
+                    for campo in origem_credito_pattern.keys():
+                        info[campo].append(temp.get(campo))
+
 
         for key, value in info.items():
             if isinstance(value, list):
