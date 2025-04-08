@@ -297,9 +297,6 @@ class RegexRules():
                 'valor_total_gps': r'(?i)Valor\s+Total\s+da\s+GPS\s+([\d\.,]+)',
                 'data_arrecadacao_gps': r'(?i)Data\s+da\s+Arrecadação\s+(\d{2}/\d{2}/\d{4})',
                 
-
-
-                
             },
         }
 
@@ -320,10 +317,6 @@ class RegexRules():
         valor_multa_tributo_pattern = r"(?i)Multa[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
         valor_juros_tributo_pattern = r"(?i)Juros[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
         valor_total_tributo_pattern = r"(?i)(?:Total\s+do\s+Tributo|Total)[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
-
-
-
-
 
         for page_num, patterns in page_patterns.items():
             if page_num < len(pdf_document.pages):
@@ -419,32 +412,11 @@ class RegexRules():
 
         for page_num in range(len(pdf_document.pages)):
             page_text = pdf_document.pages[page_num].extract_text()
-            if not page_text:
-                continue
-
-            page_text = clean_text(page_text)  # Use a mesma função de limpeza usada nos débitos
-
-            # Detectar e extrair blocos de origem do crédito
-            origem_credito_blocos = re.split(r'(?=\d+\.\s*ORIGEM DO CRÉDITO)', page_text, flags=re.IGNORECASE)
-
-            for bloco in origem_credito_blocos:
-                if re.search(r'(?i)\d+\.\s*ORIGEM DO CRÉDITO', bloco):
-                    temp = {}
-                    for campo, pattern in origem_credito_pattern.items():
-                        match = re.search(pattern, bloco)
-                        if match:
-                            valor = match.group(1).strip()
-                            if 'data' in campo:
-                                valor = RegexRules.tratar_data_competencia(valor)
-                            elif 'valor' in campo:
-                                valor = RegexRules.extrair_valor_numerico(valor)
-                            temp[campo] = valor
-                        else:
-                            temp[campo] = None
-
-                    for campo in origem_credito_pattern.keys():
-                        info[campo].append(temp.get(campo))
-
+            origem_credito_data = extract_origem_credito(page_text)
+            
+            # Atualizar o dicionário info com os resultados
+            for key in origem_credito_pattern.keys():
+                info[key].extend(origem_credito_data.get(key, []))
 
         for key, value in info.items():
             if isinstance(value, list):
