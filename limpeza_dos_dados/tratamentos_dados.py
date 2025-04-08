@@ -106,8 +106,8 @@ class LimpezaETratamentoDados():
         for col in colunas_numericas:
            df_explodido[col] = (
             df_explodido[col]
-            .fillna('0')  # Preenche valores None com '0'
-            .replace('', '0')  # Garante que strings vazias também sejam '0'
+            .fillna('0,00')  # Preenche valores None com '0'
+            .replace('', '0,00')  # Garante que strings vazias também sejam '0'
             #.astype(str)
             #.str.replace('.', '', regex=False)
             #.str.replace(',', '.', regex=False).astype(str).str.replace('.', ',', regex=False)
