@@ -169,32 +169,35 @@ class RegexRules():
         }
 
         origem_credito_pattern = {
-            'periodo_apuracao_origem_credito': r'(?i)Período de Apuração[\s:]*(\d{2}/\d{2}/\d{4})',
-            'cnpj_pagamento_origem_credito': r'(?i)CNPJ do Pagamento[\s:]*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
-            'codigo_receita_origem_credito': r'(?i)Código da Receita[\s:]+(\d{4}-\d{2})',
-            'grupo_tributo_origem_credito': r'(?i)Grupo de Tributo[\s:]+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|Data|$))',
-            'data_arrecadacao_origem_credito': r'(?i)Data de Arrecadação[\s:]*(\d{2}/\d{2}/\d{4})',
-            'valor_principal_origem_credito': r'(?i)Valor do Principal[\s:]*([\d.,]+)',
-            'valor_multa_origem_credito': r'(?i)Valor da Multa[\s:]*([\d.,]+)',
-            'valor_juros_origem_credito': r'(?i)Valor dos Juros[\s:]*([\d.,]+)',
-            'valor_total_origem_credito': r'(?i)Valor Total[\s:]*([\d.,]+)',
-            'valor_original_credito_origem_credito': r'(?i)Valor Original do Crédito[\s:]*([\d.,]+)'
+            'periodo_apuracao_origem_credito': r'(?i)Período\s+de\s+Apuração[\s:]*(\d{2}/\d{2}/\d{4})',
+            'cnpj_pagamento_origem_credito': r'(?i)CNPJ\s+do\s+Pagamento[\s:]*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+            'codigo_receita_origem_credito': r'(?i)Código\s+da\s+Receita[\s:-]*(\d{4}(?:-\d{2})?)',  # Aceita códigos com ou sem "-XX"
+            'grupo_tributo_origem_credito': r'(?i)Grupo\s+de\s+Tributo[\s:]+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|Data|$))',
+            'data_arrecadacao_origem_credito': r'(?i)Data\s+de\s+Arrecadação[\s:]*(\d{2}/\d{2}/\d{4})',
+            'valor_principal_origem_credito': r'(?i)Valor\s+do\s+Principal[\s:]*([\d.,]+)',
+            'valor_multa_origem_credito': r'(?i)Valor\s+da\s+Multa[\s:]*([\d.,]+)',
+            'valor_juros_origem_credito': r'(?i)Valor\s+dos\s+Juros[\s:]*([\d.,]+)',
+            'valor_total_origem_credito': r'(?i)Valor\s+Total[\s:]*([\d.,]+)',
+            'valor_original_credito_origem_credito': r'(?i)Valor\s+Original\s+do\s+Crédito[\s:]*([\d.,]+)'
 }
         def extract_origem_credito(text):
-            """Extrai múltiplos blocos de Origem do Crédito com melhor detecção"""
+            """Extrai múltiplos blocos de Origem do Crédito com tratamento de espaços"""
             resultados = {key: [] for key in origem_credito_pattern.keys()}
             
-            # Usar lookbehind para capturar números de bloco mais eficientemente
-            blocos = re.split(r'(?i)(?=\d+\.\s*ORIGEM DO CRÉDITO)', text)
+            # Normalizar espaços e quebras de linha
+            text = re.sub(r'\s+', ' ', text)  # Remove múltiplos espaços e quebras
+            
+            # Dividir em blocos usando o número sequencial (ex: "1.ORIGEM...")
+            blocos = re.split(r'(?i)(?=\d+\.\s*ORIGEM\s+DO\s+CRÉDITO)', text)
             
             for bloco in blocos:
-                if re.search(r'(?i)\d+\.\s*ORIGEM DO CRÉDITO', bloco):
+                if re.search(r'(?i)\d+\.\s*ORIGEM\s+DO\s+CRÉDITO', bloco):
                     temp = {}
                     for campo, pattern in origem_credito_pattern.items():
                         match = re.search(pattern, bloco)
                         if match:
-                            # Tratamento especial para datas e valores
                             value = match.group(1).strip()
+                            # Tratamento especial para dados
                             if 'data' in campo:
                                 value = RegexRules.tratar_data_competencia(value)
                             elif 'valor' in campo:
@@ -203,9 +206,10 @@ class RegexRules():
                         else:
                             temp[campo] = None
                     
-                    # Adicionar todos os campos ao resultado
-                    for campo in origem_credito_pattern.keys():
-                        resultados[campo].append(temp.get(campo))
+                    # Adicionar apenas se todos os campos essenciais estiverem presentes
+                    if temp['periodo_apuracao_origem_credito']:  # Ajuste conforme necessário
+                        for key in origem_credito_pattern.keys():
+                            resultados[key].append(temp[key])
             
             return resultados
 
@@ -398,25 +402,23 @@ class RegexRules():
             
             for block in debito_blocks:
                 for key, pattern in patterns_pags_extras.items():
-                    matches = re.search(pattern, block, flags)
-                    if matches:
-                        value = matches.group(1).strip()
-                        # Tratamento especial para códigos de receita com quebras
+                    matches = re.findall(pattern, block, flags)
+                    for match in matches:
+                        value = match.strip() if isinstance(match, str) else match[0].strip()
                         if key == 'codigos_receita':
                             value = re.sub(r'\s+', ' ', value).replace('- ', '-')
                         info[key].append(value)
-        
-        
 
+        
+        
         origem_credito_keys = set(origem_credito_pattern.keys())
 
-        for page_num in range(len(pdf_document.pages)):
-            page_text = pdf_document.pages[page_num].extract_text()
-            origem_credito_data = extract_origem_credito(page_text)
-            
-            # Atualizar o dicionário info com os resultados
-            for key in origem_credito_pattern.keys():
-                info[key].extend(origem_credito_data.get(key, []))
+        texto_completo = "\n".join(page.extract_text() for page in pdf_document.pages)
+        origem_credito_data = extract_origem_credito(texto_completo)
+
+        for key in origem_credito_pattern.keys():
+            info[key].extend(origem_credito_data.get(key, []))
+
 
         for key, value in info.items():
             if isinstance(value, list):
