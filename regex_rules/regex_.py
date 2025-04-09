@@ -459,33 +459,57 @@ class RegexRules():
             texto_paginas_extras += "\n" + pdf_document.pages[page_num_extra].extract_text()
 
         texto_paginas_extras = clean_text(texto_paginas_extras)
-        debito_blocks = re.split(r'(?=\d{3}\.\s+Débito\s+)', texto_paginas_extras)
-        debito_blocks = [b for b in debito_blocks if "Débito" in b]
+        
+        # Separar blocos de débitos corretamente (ex: 001. Débito... até antes do próximo XXX. Débito...)
+        blocos_detalhados = re.findall(r'(?:\d{3}\.\s+Débito.*?)(?=\d{3}\.\s+Débito|\Z)', texto_paginas_extras, re.DOTALL | re.IGNORECASE)
 
+        for bloco in blocos_detalhados:
+            bloco_info = {key: None for key in patterns_pags_extras}
 
-        for block in debito_blocks:
             for key, pattern in patterns_pags_extras.items():
-                matches = re.findall(pattern, block, flags)
-                for match in matches:
-                    value = match.strip() if isinstance(match, str) else match[0].strip()
+                match = re.search(pattern, bloco, flags)
+                if match:
+                    value = match.group(1).strip() if isinstance(match, re.Match) or isinstance(match, tuple) else match.strip()
                     if key == 'codigos_receita':
                         value = re.sub(r'\s+', ' ', value).replace('- ', '-')
-                    info[key].append(value)
+                    bloco_info[key] = value
+
+            # Armazenar cada campo como parte de uma lista
+            for key in patterns_pags_extras:
+                info[key].append(bloco_info.get(key, None))
+
 
         
         origem_credito_keys = set(origem_credito_pattern.keys())
         texto_completo = "\n".join(page.extract_text() for page in pdf_document.pages)
         origem_credito_data = extract_origem_credito(texto_completo)
 
+        darf_data = extract_darf(texto_completo)
+        gps_data = extract_gps(texto_completo)
+
+        for key in darf_pattern:
+            info[key].extend(darf_data.get(key, []))
+
+        for key in gps_pattern:
+            info[key].extend(gps_data.get(key, []))
+
+
         for key in origem_credito_pattern.keys():
             info[key].extend(origem_credito_data.get(key, []))
 
 
+        # Campos que devem permanecer como listas (para depois serem explodidos)
+        listas_para_explodir = set()
+        listas_para_explodir.update(origem_credito_pattern.keys())
+        listas_para_explodir.update(darf_pattern.keys())
+        listas_para_explodir.update(gps_pattern.keys())
+
         for key, value in info.items():
             if isinstance(value, list):
-                if key not in origem_credito_keys:
-                    info[key] = ";".join(value) if value else None
-                else:
+                if key in listas_para_explodir:
                     info[key] = value if value else []
+                else:
+                    info[key] = ";".join([str(v) if v is not None else '' for v in value]) if value else None
+
 
         return info  

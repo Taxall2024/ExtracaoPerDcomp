@@ -113,6 +113,43 @@ class LimpezaETratamentoDados():
             #.str.replace(',', '.', regex=False).astype(str).str.replace('.', ',', regex=False)
         )
         return df_explodido
+    
+    @staticmethod
+    def explodir_darf(df_darf):
+        cols = [col for col in df_darf.columns if col.startswith('codigo_receita_darf') or 'valor_' in col or 'data_' in col or 'periodo_apuracao' in col or 'cnpj_darf' in col or 'numero_documento_arrecadacao' in col]
+        linhas_expandidas = []
+
+        for _, row in df_darf.iterrows():
+            valores_colunas = {col: row[col] if isinstance(row[col], list) else [row[col]] for col in cols}
+            max_len = max(len(valores) for valores in valores_colunas.values())
+
+            for i in range(max_len):
+                nova = {'cod_perdcomp': row['cod_perdcomp']}
+                for col in cols:
+                    valor = valores_colunas[col]
+                    nova[col] = valor[i] if i < len(valor) else ''
+                linhas_expandidas.append(nova)
+
+        return pd.DataFrame(linhas_expandidas)
+
+    @staticmethod
+    def explodir_gps(df_gps):
+        cols = [col for col in df_gps.columns if col.startswith('codigo_pagamento_gps') or 'valor_' in col or 'data_' in col or 'periodo_apuracao' in col or 'identificador_detentor' in col or 'data_competencia_gps' in col]
+        linhas_expandidas = []
+
+        for _, row in df_gps.iterrows():
+            valores_colunas = {col: row[col] if isinstance(row[col], list) else [row[col]] for col in cols}
+            max_len = max(len(valores) for valores in valores_colunas.values())
+
+            for i in range(max_len):
+                nova = {'cod_perdcomp': row['cod_perdcomp']}
+                for col in cols:
+                    valor = valores_colunas[col]
+                    nova[col] = valor[i] if i < len(valor) else ''
+                linhas_expandidas.append(nova)
+
+        return pd.DataFrame(linhas_expandidas)
+
 
         
     @staticmethod

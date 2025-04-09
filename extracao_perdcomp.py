@@ -128,7 +128,11 @@ def main():
             'valor_juros_darf',
             'valor_total_darf',
             'valor_original_credito_darf',
-             'codigo_pagamento_gps',
+        ]
+
+        tabela5_cols = [
+            'cod_perdcomp',
+            'codigo_pagamento_gps',
             'data_competencia_gps',
             'periodo_apuracao_gps',
             'identificador_detentor_credito_gps',
@@ -137,17 +141,20 @@ def main():
             'valor_outras_entidades_gps',
             'valor_atm_multa_juros_gps',
             'valor_total_gps',
-
         ]
+
 
         df_tabela1 = df_result[tabela1_cols].copy()
         df_tabela2 = df_result[tabela2_cols].copy()
         df_tabela3 = df_result[tabela3_cols].copy()
         df_tabela4 = df_result[tabela4_cols].copy()
+        df_tabela5 = df_result[tabela5_cols].copy()
 
       # Explodir Tabela2 (múltiplas linhas viram colunas numeradas)
         df_tabela2_explodida = LimpezaETratamentoDados.explodir_tabela2(df_tabela2)
         df_tabela3 = LimpezaETratamentoDados.explodir_origem_credito(df_tabela3)
+        df_tabela4 = LimpezaETratamentoDados.explodir_darf(df_tabela4)
+        df_tabela5 = LimpezaETratamentoDados.explodir_gps(df_tabela5)
         df_tabela3, df_tabela4 = LimpezaETratamentoDados.limpar_tabelas_3_e_4(df_tabela3, df_tabela4)
 
 
