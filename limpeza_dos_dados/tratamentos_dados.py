@@ -112,8 +112,6 @@ class LimpezaETratamentoDados():
             #.str.replace('.', '', regex=False)
             #.str.replace(',', '.', regex=False).astype(str).str.replace('.', ',', regex=False)
         )
-
-
         return df_explodido
 
         
