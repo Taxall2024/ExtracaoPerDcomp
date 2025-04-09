@@ -248,7 +248,7 @@ def main():
                 nome_arquivo_excel = f"{nome_cliente}_Export_PERDCOMPs.xlsx"
 
         # Gerar Excel em memória
-        excel_bytes = ExportarDados.gerar_excel_em_memoria( df_tabela1, df_tabela2_explodida, df_tabelona, df_tabela3, df_tabela4)
+        excel_bytes = ExportarDados.gerar_excel_em_memoria( df_tabela1, df_tabela2_explodida, df_tabelona, df_tabela3, df_tabela4, df_tabela5)
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ALTERAR AQUI <<
        # Botão para download
         st.download_button(

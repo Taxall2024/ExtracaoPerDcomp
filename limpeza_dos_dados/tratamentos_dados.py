@@ -116,21 +116,31 @@ class LimpezaETratamentoDados():
     
     @staticmethod
     def explodir_darf(df_darf):
-        cols = [col for col in df_darf.columns if col.startswith('codigo_receita_darf') or 'valor_' in col or 'data_' in col or 'periodo_apuracao' in col or 'cnpj_darf' in col or 'numero_documento_arrecadacao' in col]
+        cols = [col for col in df_darf.columns if col.startswith('codigo_receita_darf') or 
+                'valor_' in col or 'data_' in col or 'periodo_apuracao' in col or 
+                'cnpj_darf' in col or 'numero_documento_arrecadacao' in col]
+        
         linhas_expandidas = []
 
         for _, row in df_darf.iterrows():
+            cod = row.get('cod_perdcomp', None)
+            if not cod:
+                print(f"[AVISO] Linha ignorada na função explodir_darf (sem cod_perdcomp): {row.to_dict()}")
+                continue
+
             valores_colunas = {col: row[col] if isinstance(row[col], list) else [row[col]] for col in cols}
             max_len = max(len(valores) for valores in valores_colunas.values())
 
             for i in range(max_len):
-                nova = {'cod_perdcomp': row['cod_perdcomp']}
+                nova = {'cod_perdcomp': cod}
                 for col in cols:
                     valor = valores_colunas[col]
                     nova[col] = valor[i] if i < len(valor) else ''
                 linhas_expandidas.append(nova)
 
         return pd.DataFrame(linhas_expandidas)
+
+
 
     @staticmethod
     def explodir_gps(df_gps):
