@@ -480,7 +480,7 @@ class RegexRules():
 
 
         
-        origem_credito_keys = set(origem_credito_pattern.keys())
+        #origem_credito_keys = set(origem_credito_pattern.keys())
         texto_completo = "\n".join(page.extract_text() for page in pdf_document.pages)
         origem_credito_data = extract_origem_credito(texto_completo)
 
@@ -510,6 +510,4 @@ class RegexRules():
                     info[key] = value if value else []
                 else:
                     info[key] = ";".join([str(v) if v is not None else '' for v in value]) if value else None
-
-
         return info  
