@@ -239,6 +239,40 @@ class RegexRules():
                         resultados[key].append(temp[key])
 
             return resultados
+        
+        def extract_darf(text):
+            resultados = {key: [] for key in darf_pattern}
+            blocos = re.split(r'(?=Período de Apuração)', text, flags=re.IGNORECASE)
+
+            for bloco in blocos:
+                if not re.search(r"Código da Receita", bloco):
+                    continue
+                temp = {}
+                for campo, pattern in darf_pattern.items():
+                    match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
+                    temp[campo] = match.group(1).strip() if match else None
+                if temp['codigo_receita_darf']:
+                    for k in resultados:
+                        resultados[k].append(temp[k])
+            return resultados
+
+
+        def extract_gps(text):
+            resultados = {key: [] for key in gps_pattern}
+            blocos = re.split(r'(?=Código\s+do\s+Pagamento)', text, flags=re.IGNORECASE)
+
+            for bloco in blocos:
+                if not re.search(r"Competência", bloco):
+                    continue
+                temp = {}
+                for campo, pattern in gps_pattern.items():
+                    match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
+                    temp[campo] = match.group(1).strip() if match else None
+                if temp['codigo_pagamento_gps']:
+                    for k in resultados:
+                        resultados[k].append(temp[k])
+            return resultados
+
 
 
         page_patterns = {
