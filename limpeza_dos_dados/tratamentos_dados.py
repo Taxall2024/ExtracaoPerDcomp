@@ -165,7 +165,7 @@ class LimpezaETratamentoDados():
     @staticmethod
     def criar_tabelona(df_tabela1, df_tabela2_explodida, df_tabela3, df_tabela4):
         """
-        Converte múltiplas linhas da Tabela 2 em colunas numeradas e
+        Converte múltiplas linhas das Tabelas 2, 3 e 4 em colunas numeradas e
         mescla os dados com a Tabela 1 utilizando cod_perdcomp como chave.
         """
 
@@ -179,26 +179,41 @@ class LimpezaETratamentoDados():
             elif df.empty:
                 df['cod_perdcomp'] = codigos_perdcomp[0] if len(codigos_perdcomp) == 1 else ''
 
+        # Pivotar Tabela 2
         tabela2_renomeada = df_tabela2_explodida.copy()
         tabela2_renomeada["row_number"] = tabela2_renomeada.groupby("cod_perdcomp").cumcount() + 1
 
         df_tabela2_pivot = tabela2_renomeada.pivot(index="cod_perdcomp", columns="row_number")
         df_tabela2_pivot.columns = [f"{col}_{num}" for col, num in df_tabela2_pivot.columns]
 
-        # Ordenar as colunas anexadas por numeração crescente (_1, _2, _3, etc)
         colunas_tabela2 = sorted(df_tabela2_pivot.columns, key=lambda x: int(x.split('_')[-1]))
 
-        # Merge incremental com segurança
+        # Merge principal
         df_tabelona = df_tabela1.copy()
 
         if not df_tabela2_pivot.empty:
             df_tabelona = df_tabelona.merge(df_tabela2_pivot[colunas_tabela2], on="cod_perdcomp", how="left")
+
+        # Pivotar Tabela 3 (Origem do Crédito)
         if not df_tabela3.empty:
-            df_tabelona = df_tabelona.merge(df_tabela3, on="cod_perdcomp", how="left")
+            df_tabela3 = df_tabela3.copy()
+            df_tabela3["row_number"] = df_tabela3.groupby("cod_perdcomp").cumcount() + 1
+            df_tabela3_pivot = df_tabela3.pivot(index="cod_perdcomp", columns="row_number")
+            df_tabela3_pivot.columns = [f"{col}_{num}" for col, num in df_tabela3_pivot.columns]
+            df_tabela3_pivot = df_tabela3_pivot.reset_index()
+            df_tabelona = df_tabelona.merge(df_tabela3_pivot, on="cod_perdcomp", how="left")
+
+        # Pivotar Tabela 4 (DARFs)
         if not df_tabela4.empty:
-            df_tabelona = df_tabelona.merge(df_tabela4, on="cod_perdcomp", how="left")
+            df_tabela4 = df_tabela4.copy()
+            df_tabela4["row_number"] = df_tabela4.groupby("cod_perdcomp").cumcount() + 1
+            df_tabela4_pivot = df_tabela4.pivot(index="cod_perdcomp", columns="row_number")
+            df_tabela4_pivot.columns = [f"{col}_{num}" for col, num in df_tabela4_pivot.columns]
+            df_tabela4_pivot = df_tabela4_pivot.reset_index()
+            df_tabelona = df_tabelona.merge(df_tabela4_pivot, on="cod_perdcomp", how="left")
 
         return df_tabelona
+
 
 
     @staticmethod
