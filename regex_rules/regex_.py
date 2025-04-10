@@ -209,51 +209,55 @@ class RegexRules():
 
 
         def extract_origem_credito(text):
-            """
-            Extrai múltiplos blocos de Origem do Crédito com base em '1.Período de Apuração', '2.Período...' etc.
-            """
             resultados = {key: [] for key in origem_credito_pattern.keys()}
 
-            # Normalizar texto
+            # Verifica se o texto contém o bloco "ORIGEM DO CRÉDITO"
+            if "ORIGEM DO CRÉDITO" not in text.upper():
+                return resultados  # Retorna dicionário vazio se o bloco não existir
+
             text = re.sub(r'[ \t]+', ' ', text)
             text = re.sub(r'\n+', '\n', text)
 
-            # Dividir por blocos que começam com número + "Período de Apuração"
-            blocos = re.split(r'(?=\d+\.\s*Período de Apuração)', text, flags=re.IGNORECASE)
+            blocos = re.split(r'(?=ORIGEM DO CRÉDITO)', text, flags=re.IGNORECASE)
 
             for bloco in blocos:
-                if not re.search(r'Período de Apuração', bloco, flags=re.IGNORECASE):
-                    continue
+                if "ORIGEM DO CRÉDITO" not in bloco.upper():
+                    continue  # Garante novamente
 
                 temp = {}
                 for campo, pattern in origem_credito_pattern.items():
                     match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
-                    if match:
-                        value = match.group(1).strip()
-                        temp[campo] = value
-                    else:
-                        temp[campo] = None
+                    temp[campo] = match.group(1).strip() if match else None
 
-                if temp['periodo_apuracao_origem_credito']:  # Campo obrigatório
+                # Só adiciona se pelo menos 3 campos forem encontrados
+                campos_validos = [temp[k] for k in temp if temp[k]]
+                if len(campos_validos) >= 3:
                     for key in origem_credito_pattern:
                         resultados[key].append(temp[key])
 
             return resultados
+
+
         
         def extract_darf(text):
             resultados = {key: [] for key in darf_pattern}
             blocos = re.split(r'(?=Período de Apuração)', text, flags=re.IGNORECASE)
 
             for bloco in blocos:
-                if not re.search(r"Código da Receita", bloco):
+                if "DARF" not in bloco.upper():
                     continue
+
                 temp = {}
                 for campo, pattern in darf_pattern.items():
                     match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
                     temp[campo] = match.group(1).strip() if match else None
-                if temp['codigo_receita_darf']:
+
+                # Adiciona somente se valor_principal_darf OU valor_total_darf forem não vazios
+                campos_validos = [temp[k] for k in ['valor_principal_darf', 'valor_total_darf'] if temp[k]]
+                if campos_validos:
                     for k in resultados:
-                        resultados[k].append(temp[k])
+                        resultados[k].append(temp[k] if temp[k] else "")
+
             return resultados
 
 
