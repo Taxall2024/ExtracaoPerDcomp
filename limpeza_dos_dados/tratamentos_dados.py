@@ -168,6 +168,17 @@ class LimpezaETratamentoDados():
         Converte múltiplas linhas da Tabela 2 em colunas numeradas e
         mescla os dados com a Tabela 1 utilizando cod_perdcomp como chave.
         """
+
+        # Lista dos códigos de PER/DCOMP
+        codigos_perdcomp = df_tabela1['cod_perdcomp'].dropna().unique()
+
+        # Preenche cod_perdcomp nos DataFrames vazios
+        for df in [df_tabela2_explodida, df_tabela3, df_tabela4]:
+            if 'cod_perdcomp' not in df.columns:
+                df['cod_perdcomp'] = codigos_perdcomp[0] if len(codigos_perdcomp) == 1 else ''
+            elif df.empty:
+                df['cod_perdcomp'] = codigos_perdcomp[0] if len(codigos_perdcomp) == 1 else ''
+
         tabela2_renomeada = df_tabela2_explodida.copy()
         tabela2_renomeada["row_number"] = tabela2_renomeada.groupby("cod_perdcomp").cumcount() + 1
 
@@ -177,12 +188,18 @@ class LimpezaETratamentoDados():
         # Ordenar as colunas anexadas por numeração crescente (_1, _2, _3, etc)
         colunas_tabela2 = sorted(df_tabela2_pivot.columns, key=lambda x: int(x.split('_')[-1]))
 
-        #df_tabelona = df_tabela1.merge(df_tabela2_pivot, on="cod_perdcomp", how="left")
-        df_tabelona = df_tabela1.merge(df_tabela2_pivot[colunas_tabela2], on="cod_perdcomp", how="left")
-        df_tabelona = df_tabelona.merge(df_tabela3, on="cod_perdcomp", how="left") 
-        df_tabelona = df_tabelona.merge(df_tabela4, on="cod_perdcomp", how="left") 
+        # Merge incremental com segurança
+        df_tabelona = df_tabela1.copy()
+
+        if not df_tabela2_pivot.empty:
+            df_tabelona = df_tabelona.merge(df_tabela2_pivot[colunas_tabela2], on="cod_perdcomp", how="left")
+        if not df_tabela3.empty:
+            df_tabelona = df_tabelona.merge(df_tabela3, on="cod_perdcomp", how="left")
+        if not df_tabela4.empty:
+            df_tabelona = df_tabelona.merge(df_tabela4, on="cod_perdcomp", how="left")
 
         return df_tabelona
+
 
     @staticmethod
     def limpar_tabelas_3_e_4(df_tabela3, df_tabela4):
