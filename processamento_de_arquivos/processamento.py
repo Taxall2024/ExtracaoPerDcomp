@@ -1,4 +1,7 @@
-import fitz
+#import fitz
+import io
+import pdfplumber
+import warnings
 from regex_rules.regex_ import RegexRules
 import pandas as pd
 
@@ -10,10 +13,12 @@ class Processamento():
         all_data = []
         for uploaded_file in uploaded_files:
             pdf_bytes = uploaded_file.read()
-            with fitz.open(stream=pdf_bytes, filetype='pdf') as pdf_document:
+            pdf_stream = io.BytesIO(pdf_bytes)
+            with pdfplumber.open(pdf_stream) as pdf_document:
+                # Processa o documento inteiro uma única vez
                 info = RegexRules.extract_info_from_pages(pdf_document)
                 info['Arquivo'] = uploaded_file.name
-                all_data.append(info)
+                all_data.append(info)  # Uma entrada por arquivo
 
         df = pd.DataFrame(all_data)
 
@@ -46,9 +51,9 @@ class Processamento():
                 df[coluna] = df[coluna].fillna('---')
 
         colunas_data = ['data_inicial_periodo', 'data_final_periodo', 'data_transmissao']
-        for coluna in colunas_data:
-            if coluna in df.columns:
-                df[coluna] = pd.to_datetime(df[coluna], format='%d/%m/%Y', errors='coerce')
+        # for coluna in colunas_data:
+        #     if coluna in df.columns:
+        #         df[coluna] = pd.to_datetime(df[coluna], format='%d/%m/%Y', errors='coerce')
 
         return df
 

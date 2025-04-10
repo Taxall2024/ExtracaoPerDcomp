@@ -2,7 +2,6 @@ import re
 import pandas as pd
 import calendar
 
-
 class RegexRules():
 
     @staticmethod
@@ -111,7 +110,11 @@ class RegexRules():
             'valor_saldo_credito_original': None,
             'cod_perdcomp_cancelado': None,
             'total_parcelas_composicao_credito': None, 
+            'valor_disponivel_para_restituicao_apurado_documento_inicial': None,
+            'valor_original_credito_utilizado_compensacoes_gfip': None,
+            'valor_original_credito_disponivel': None,
             'imposto_devido': None,
+            'valor_credito_passivel_restituicao': None,
             'grupo_tributo': [],
             'debito_sucedida': [],
             'periodicidade': [],
@@ -130,36 +133,157 @@ class RegexRules():
             'periodicidade_dctfweb': [],   
             'periodo_apuracao_dctfweb': [], 
 
-            'periodo_apuracao_origem_credito': None,
-            'cnpj_origem_credito': None,
-            'codigo_receita_origem_credito': None,
-            'grupo_tributo_origem_credito': None,  
-            'valor_principal_origem_credito': None,
-            'valor_multa_origem_credito': None,
-            'valor_juros_origem_credito': None,
-            'valor_total_origem_credito': None,
+            'periodo_apuracao_origem_credito': [],
+            'cnpj_pagamento_origem_credito': [],
+            'codigo_receita_origem_credito': [],
+            'grupo_tributo_origem_credito': [], 
+            'data_arrecadacao_origem_credito': [],
+            'valor_principal_origem_credito': [],
+            'valor_multa_origem_credito': [],
+            'valor_juros_origem_credito': [],
+            'valor_total_origem_credito': [],
+            'valor_original_credito_origem_credito': [],
 
-            'periodo_apuracao_darf': None,
-            'cnpj_darf': None,
-            'codigo_receita_darf': None,
-            'numero_documento_arrecadacao': None,
-            'data_vencimento_darf': None,
-            'data_arrecadacao_darf': None,
-            'valor_principal_darf': None,
-            'valor_multa_darf': None,
-            'valor_juros_darf': None,
-            'valor_total_darf': None,
-            'valor_original_credito_darf': None,
+            'periodo_apuracao_darf': [],
+            'cnpj_darf': [],
+            'codigo_receita_darf': [],
+            'numero_documento_arrecadacao': [],
+            'data_vencimento_darf': [],
+            'data_arrecadacao_darf': [],
+            'valor_principal_darf': [],
+            'valor_multa_darf': [],
+            'valor_juros_darf': [],
+            'valor_total_darf': [],
+            'valor_original_credito_darf': [],
+
+            'codigo_pagamento_gps': [],
+            'data_competencia_gps': [],
+            'periodo_apuracao_gps': [],
+            'identificador_detentor_credito_gps': [],
+            'data_arrecadacao_gps': [],
+            'valor_inss_gps': [],
+            'valor_outras_entidades_gps': [],
+            'valor_atm_multa_juros_gps': [],
+            'valor_total_gps': [],
             
         }
+
+        origem_credito_pattern = {
+            'periodo_apuracao_origem_credito': r'(?i)Período\s+de\s+Apuração[\s:]*(\d{2}/\d{2}/\d{4})',
+            'cnpj_pagamento_origem_credito': r'(?i)CNPJ\s+do\s+Pagamento[\s:]*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+            'codigo_receita_origem_credito': r'(?i)Código\s+da\s+Receita[\s:-]*(\d{4}(?:-\d{2})?)',  # Aceita códigos com ou sem "-XX"
+            'grupo_tributo_origem_credito': r'(?i)Grupo\s+de\s+Tributo[\s:]+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|Data|$))',
+            'data_arrecadacao_origem_credito': r'(?i)Data\s+de\s+Arrecadação[\s:]*(\d{2}/\d{2}/\d{4})',
+            'valor_principal_origem_credito': r'(?i)Valor\s+do\s+Principal[\s:]*([\d.,]+)',
+            'valor_multa_origem_credito': r'(?i)Valor\s+da\s+Multa[\s:]*([\d.,]+)',
+            'valor_juros_origem_credito': r'(?i)Valor\s+dos\s+Juros[\s:]*([\d.,]+)',
+            'valor_total_origem_credito': r'(?i)Valor\s+Total[\s:]*([\d.,]+)',
+            'valor_original_credito_origem_credito': r'(?i)Valor\s+Original\s+do\s+Crédito[\s:]*([\d.,]+)'
+        }
+
+        darf_pattern = {
+        'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)",
+        'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s",
+        'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
+        'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)",
+        'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)",
+        'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)",
+        'valor_principal_darf': r"Valor do Principal\s*([\d.,]+)",
+        'valor_multa_darf': r"Valor da Multa\s*([\d.,]+)",
+        'valor_juros_darf': r"Valor dos Juros\s*([\d.,]+)",
+        'valor_total_darf': r"Valor Total do DARF\s*([\d.,]+)",
+        'valor_original_credito_darf': r"Valor Original do Crédito\s*([\d.,]+)",
+}
+
+        gps_pattern = {
+        'codigo_pagamento_gps': r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
+        'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
+        'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+        'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)",
+        'data_arrecadacao_gps': r'(?i)Data\s+da\s+Arrecadação\s+(\d{2}/\d{2}/\d{4})',
+        'valor_inss_gps': r'(?i)Valor\s+do\s+INSS\s+([\d\.,]+)',
+        'valor_outras_entidades_gps': r'(?i)Valor\s+de\s+Outras\s+Entidades\s+([\d\.,]+)',
+        'valor_atm_multa_juros_gps': r'(?i)Valor\s+de\s+ATM,\s+Multa\s+e\s+Juros\s+([\d\.,]+)',
+        'valor_total_gps': r'(?i)Valor\s+Total\s+da\s+GPS\s+([\d\.,]+)',
+        }
+
+
+        def extract_origem_credito(text):
+            resultados = {key: [] for key in origem_credito_pattern.keys()}
+
+            # Verifica se o texto contém o bloco "ORIGEM DO CRÉDITO"
+            if "ORIGEM DO CRÉDITO" not in text.upper():
+                return resultados  # Retorna dicionário vazio se o bloco não existir
+
+            text = re.sub(r'[ \t]+', ' ', text)
+            text = re.sub(r'\n+', '\n', text)
+
+            blocos = re.split(r'(?=ORIGEM DO CRÉDITO)', text, flags=re.IGNORECASE)
+
+            for bloco in blocos:
+                if "ORIGEM DO CRÉDITO" not in bloco.upper():
+                    continue  # Garante novamente
+
+                temp = {}
+                for campo, pattern in origem_credito_pattern.items():
+                    match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
+                    temp[campo] = match.group(1).strip() if match else None
+
+                # Só adiciona se pelo menos 3 campos forem encontrados
+                campos_validos = [temp[k] for k in temp if temp[k]]
+                if len(campos_validos) >= 3:
+                    for key in origem_credito_pattern:
+                        resultados[key].append(temp[key])
+
+            return resultados
+
+
+        
+        def extract_darf(text):
+            resultados = {key: [] for key in darf_pattern}
+            blocos = re.split(r'(?=Período de Apuração)', text, flags=re.IGNORECASE)
+
+            for bloco in blocos:
+                if "DARF" not in bloco.upper():
+                    continue
+
+                temp = {}
+                for campo, pattern in darf_pattern.items():
+                    match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
+                    temp[campo] = match.group(1).strip() if match else None
+
+                # Adiciona somente se valor_principal_darf OU valor_total_darf forem não vazios
+                campos_validos = [temp[k] for k in ['valor_principal_darf', 'valor_total_darf'] if temp[k]]
+                if campos_validos:
+                    for k in resultados:
+                        resultados[k].append(temp[k] if temp[k] else "")
+
+            return resultados
+
+
+        def extract_gps(text):
+            resultados = {key: [] for key in gps_pattern}
+            blocos = re.split(r'(?=Código\s+do\s+Pagamento)', text, flags=re.IGNORECASE)
+
+            for bloco in blocos:
+                if not re.search(r"Competência", bloco):
+                    continue
+                temp = {}
+                for campo, pattern in gps_pattern.items():
+                    match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
+                    temp[campo] = match.group(1).strip() if match else None
+                if temp['codigo_pagamento_gps']:
+                    for k in resultados:
+                        resultados[k].append(temp[k])
+            return resultados
+
+
 
         page_patterns = {
             0: {
                 'cod_cnpj': r"CNPJ \s*([\d./-]+)",
                 'cod_perdcomp': r"CNPJ \s*[\d./-]+\s*([\d.]+-[\d.]+)",
-
-                'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:LTDA|ME|EIRELI|SA)\b)",
-                #'nome_cliente': r"Nome Empresarial\s*([A-Za-z0-9\s.&-]+?(?:\s(?:LTDA|ME|EIRELI|SA)\b)?)",
+                'nome_cliente': r"Nome Empresarial\s*(.+)",
 
                 'data_transmissao': r"Data de Transmissão\s*([\d/]+)",
                 'tipo_documento': r"Tipo de Documento\s*([\w\s]+?)(?=\s*Tipo de Crédito)",
@@ -183,12 +307,13 @@ class RegexRules():
                 'data_final_periodo': r"Data Final do Período\s*([\d/]+)",
                 'valor_saldo_negativo': r"Valor do Saldo Negativo\s*([\d.,]+)",
                 'valor_credito_atualizado': r"Crédito Atualizado\s*([\d.,]+)",
-                'valor_saldo_credito_original': r"Saldo do Crédito Original\s*([\d.,]+)",
+                'valor_saldo_credito_original': r"Saldo do Crédito Original[\s:]*([\d.,]+)", 
                 'selic_acumulada': r"Selic Acumulada\s*([\d.,]+)",
                 'data_competencia': r"(?:1[º°]|2[º°]|3[º°]|4[º°])\s*Trimestre/\d{4}",
-                'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)/\d{4})\s*",
-                'valor_credito_original_data_entrega': r"\s*([\d.,]+)Crédito Original na Data da Entrega",
-                'total_parcelas_composicao_credito': r"Total das Parcelas de Composição do Crédito\s*([\d.,]+)",
+                'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
+                'data_arrecadacao': r'Data de Arrecadação\s*([\d/]+)', 
+                'valor_credito_original_data_entrega': r'(?:Crédito Original na Data (?:de|da) Entrega|Crédito Original na Data da Entrega)[\s:]*([\d]{1,3}(?:\.?\d{3})*(?:,\d{2}))',
+                'total_parcelas_composicao_credito': r'(?:(?<=Total das Parcelas de Composição do Crédito\s)[\d.,]+|[\d.,]+(?=\s*Total das Parcelas de Composição do Crédito))',
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
                 'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
@@ -197,54 +322,73 @@ class RegexRules():
                 'valor_total_debitos_desta_dcomp': r"Total dos débitos desta DCOMP[\s\S]*?(\d{1,3}(?:\.\d{3})*,\d{2})",
                 'valor_total_credito_original_utilizado_dcomp': r"Total do Crédito Original [Uu]tilizado nesta DCOMP\s*([\d.,]+)",
                 'csll_devida': r"\sCSLL Devida\s([\d.,]+)\s*",
+                'valor_disponivel_para_restituicao_apurado_documento_inicial': r'(?i)Valor\s+Disponível\s+para\s+Restituição\s+Apurado\s+no.*?(\d{1,3}(?:\.\d{3})*,\d{2}).*?Documento\s+Inicial',
+                'valor_original_credito_utilizado_compensacoes_gfip': r'(?i)Valor\s+Original\s+do\s+Crédito\s+Utilizado\s+em.*?(\d{1,3}(?:\.\d{3})*,\d{2}).*?Compensações\s+em\s+GFIP',
+                'valor_credito_passivel_restituicao': r"Crédito Passível de Restituição\s*([\d.,]+)",
 
-                #Origem do Crédito
-                'periodo_apuracao_origem_credito': r"ORIGEM DO CRÉDITO*?\s([\d/]+)\sPeríodo de Apuração",
-                'cnpj_origem_credito': r"\s([\d.\/-]+)\sCNPJ do Pagamento\s", 
-                'codigo_receita_origem_credito': r"Código da Receita\s(\d{4})",
-                'grupo_tributo_origem_credito': r"Grupo de Tributo\s([A-Z]+(?:/[A-Z]+)?(?:,\s[A-Z]+)*)",
-                'valor_principal_origem_credito': r"Valor do Principal\s*([\d.,]+)",
-                'valor_multa_origem_credito': r"Valor da Multa\s*([\d.,]+)",   
-                'valor_juros_origem_credito': r"\s([\d.,]+)\sValor dos Juros", 
-                'valor_total_origem_credito': r"Valor Total\s*([\d.,]+)",
+
+                # # Origem do Crédito
+                # 'periodo_apuracao_origem_credito': r"(?i)(?:Período de Apuração|Período de Apuração)\s*(\d{2}/\d{2}/\d{4})",
+                # 'cnpj_pagamento_origem_credito': r"(?<!\d)(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\s+CNPJ do Pagamento",
+                # 'codigo_receita_origem_credito': r"Código da Receita\s+(\d{4}-\d{2})",
+                # 'grupo_tributo_origem_credito': r"Grupo de Tributo\s+([A-Z]+)(?=\s*Código da Receita)",
+                # 'data_arrecadacao_origem_credito': r"Data de Arrecadação\s+(\d{2}/\d{2}/\d{4})",  
+                # 'valor_principal_origem_credito': r"Valor do Principal\s+([\d.,]+)",
+                # 'valor_multa_origem_credito': r"Valor da Multa\s+([\d.,]+)",   
+                # 'valor_juros_origem_credito': r"([\d.,]+)\s+Valor dos Juros", 
+                # 'valor_total_origem_credito': r"Valor Total\s+([\d.,]+)\b",  
+                # 'valor_original_credito_origem_credito': r'Valor Original do Crédito\s+([\d.,]+)\b', 
+
 
                 #DARF
-                'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
-                'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s", 
-                'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
-                'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)\s", 
-                'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
-                'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
-                'valor_principal_darf': r"DARF NUMERDADO*?\sData\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
-                'valor_multa_darf': r"DARF NUMERDADO*?\sValor da Multa\s*([\d.,]+)", 
-                'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
-                'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
-                'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)"
-            }
+                # 'periodo_apuracao_darf': r"Período de Apuração\s*([\d/]+)\s",
+                # 'cnpj_darf': r"\sCNPJ\s*([\d.\/-]+)\s", 
+                # 'codigo_receita_darf': r"Código da Receita\s*(\d{4})",
+                # 'numero_documento_arrecadacao': r"Número do Documento de Arrecadação\s*([\d.\/-]+)\s", 
+                # 'data_vencimento_darf': r"Data de Vencimento\s*([\d/]+)\s",
+                # 'data_arrecadacao_darf': r"Data da Arrecadação\s*([\d/]+)\s",
+                # 'valor_principal_darf': r"DARF NUMERDADO*?\sData\s+da\s+Arrecadação\s+\d{1,2}/\d{1,2}/\d{4}\s+Valor do Principal\s*([\d.,]+)",
+                # 'valor_multa_darf': r"DARF NUMERDADO*?\sValor da Multa\s*([\d.,]+)", 
+                # 'valor_juros_darf': r"DARF NUMERDADO*?\sValor dos Juros\s*([\d.,]+)", 
+                # 'valor_total_darf': r"DARF NUMERDADO*?\sValor Total do DARF\s*([\d.,]+)", #Adicionar a opção para Valor Total
+                # 'valor_original_credito_darf': r"DARF NUMERDADO*?\sValor Original do Crédito\s([\d.,]+)",
+
+                #GPS
+                # 'codigo_pagamento_gps':   r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
+                # 'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
+                # 'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+                # 'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)", 
+                # 'valor_inss_gps': r'(?i)Valor\s+do\s+INSS\s+([\d\.,]+)',
+                # 'valor_outras_entidades_gps': r'(?i)Valor\s+de\s+Outras\s+Entidades\s+([\d\.,]+)',
+                # 'valor_atm_multa_juros_gps': r'(?i)Valor\s+de\s+ATM,\s+Multa\s+e\s+Juros\s+([\d\.,]+)',
+                # 'valor_total_gps': r'(?i)Valor\s+Total\s+da\s+GPS\s+([\d\.,]+)',
+                # 'data_arrecadacao_gps': r'(?i)Data\s+da\s+Arrecadação\s+(\d{2}/\d{2}/\d{4})',
+                
+            },
         }
 
-        codigo_receita_pattern = r"Código da Receita/Denominação\s*(\d{4}-\d{2}\s*-\s*.*)(?=\nGrupo de Tributo|$)"
-        data_vencimento_tributo_pattern = r"Data de Vencimento do Tributo/Quota\s*([\d/]+)"
-        valor_principal_tributo_pattern = r"Principal\s*([\d.,]+)"
-        valor_multa_tributo_pattern = r"Multa\s*([\d.,]+)"
-        valor_juros_tributo_pattern = r"Juros\s*([\d.,]+)"
-        valor_total_tributo_pattern = r"Total\s*([\d.,]+)"
-        valor_credito_transmissao_pattern = r"([\d.,]+)\sCrédito Original na Data da Entrega"
-        cnpj_detentor_debito_pattern = r"CNPJ do Detentor do Débito\s*([\d./-]+)"
+        cnpj_detentor_debito_pattern = r'CNPJ\s+do\s+Detentor\s+do\s+Débito[\s:]*([\d./-]+)'
         debito_sucedida_pattern = r"Débito de Sucedida\s*(?:\n+)?\s*(\w+)"
-        debito_controlado_processo_pattern = r"Débito Controlado em Processo\s*([\w\s]+?)(?=\n|\.|$)"
+        grupo_tributo_pattern = r'Grupo\s+de\s+Tributo\s+([^\n]+?)(?=\s*\n|Código|$|\.)'
+        codigo_receita_pattern = r"Código da Receita/Denominação[\s:-]*(.*?)(?=\s*Débito Controlado em Processo)"
+        debito_controlado_processo_pattern = r"Débito Controlado em Processo[\s:]*(\b\w+\b)(?=\s*(?:\n|\.|Período|Data|$))"
         periodo_apuracao_pattern = r"Período de Apuração[:\s]*((?:[\d]{1,2}/)?\d{4}|(?:1º|2º|3º)?\s*(?:Decêndio\s+de\s+)?(?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s+de\s+\d{4})"
         periodicidade_pattern = r"Periodicidade\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
-        grupo_tributo_pattern = r"Grupo de Tributo\s*([\w\s/\-]+?)(?=\n|\.|$)"
-        numero_recibo_dctfweb_pattern = r"Indicativo de organismo estrangeiro DCTFWeb\s*(\d{15,16})"
-        data_transmissao_dctfweb_pattern = r"Data de Transmissão DCTFWeb\s*(\d{2}/\d{2}/\d{4})"
-        categoria_dcftweb_pattern = r"Categoria DCTFWeb Geral\s"
-        periodicidade_dctfweb_pattern = r"Periodicidade DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)"
-        periodo_apuracao_dctfweb_pattern = r"Período\s*Apuração\s*DCTFWeb\s*Periodicidade\s*DCTFWeb\s*(?:Mensal)?\s*(\d{4}|\d{2}/\d{4})"
+        data_vencimento_tributo_pattern = r"(?i)Data\s*de\s*Vencimento\s*do\s*Tributo/Quota[\s:]*(\d{2}/\d{2}/\d{4})"
+        numero_recibo_dctfweb_pattern = r"Número\s+do\s+Recibo\s+de\s+Transmissão\s+DCTFWeb\s+(\d{15,16})"
+        data_transmissao_dctfweb_pattern = r"Data\s+de\s+Transmissão\s+DCTFWeb\s+(\d{2}/\d{2}/\d{4})"
+        categoria_dcftweb_pattern = r"Categoria\s+DCTFWeb\s+([A-Za-zÀ-ú]+)"
+        periodicidade_dctfweb_pattern = r"Periodicidade\s+DCTFWeb\s+(Anual|Mensal|Decendial|Diário|Trimestral)\b"
+        periodo_apuracao_dctfweb_pattern = r"Período\s+de\s+Apuração\s+DCTFWeb\s+(\d{4}|\d{2}/\d{4})"
+        valor_principal_tributo_pattern = r"(?i)Principal[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
+        valor_multa_tributo_pattern = r"(?i)Multa[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
+        valor_juros_tributo_pattern = r"(?i)Juros[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
+        valor_total_tributo_pattern = r"(?i)(?:Total\s+do\s+Tributo|Total)[\s:\-]*([\d\.]{1,3}(?:\.\d{3})*,\d{2})"
 
         for page_num, patterns in page_patterns.items():
-            if page_num < pdf_document.page_count:
-                page_text = pdf_document[page_num].get_text()
+            if page_num < len(pdf_document.pages):
+                page = pdf_document.pages[page_num]  # Acessando a página corretamente com pdfplumber
+                page_text = page.extract_text()
                 if info.get('tipo_documento') == 'Pedido de Ressarcimento' and page_num == 2:
                     ano_match = re.search(r"Ano\s*(\d{4})", page_text)
                     trimestre_match = re.search(r"(\d{1,2}[º])\s*Trimestre", page_text)
@@ -264,15 +408,6 @@ class RegexRules():
                         elif key not in ['nome_responsavel_preenchimento', 'cod_cpf_preenchimento']:
                             info[key] = matches[0].strip()
 
-                #match_compensado = re.search(valor_compensado_pattern, page_text)
-                #if match_compensado:
-                    #info['valor_total_credito_original_usado_dcomp'] = match_compensado.group(1)
-                    #info['valor_total_credito_original_usado_dcomp'] = info['valor_total_credito_original_usado_dcomp'].replace('.', '').replace(',', '.')
-
-                # valor_credito_data_transmissao
-                match_credito_transmissao = re.search(valor_credito_transmissao_pattern, page_text)
-                if match_credito_transmissao:
-                    info['valor_credito_original_data_entrega'] = match_credito_transmissao.group(1)
 
                 if info.get('tipo_documento'):
                     if info['tipo_documento'] in ['Pedido de Restituição', 'Declaração de Compensação', 'Pedido de Ressarcimento']:
@@ -293,6 +428,7 @@ class RegexRules():
                         else:
                             info['cod_perdcomp_inicial'] = cod_per_origem_match.group(1).strip()
 
+        
         patterns_pags_extras = {
             'cnpj_detentor_debito': cnpj_detentor_debito_pattern,
             'codigos_receita': codigo_receita_pattern,
@@ -313,15 +449,69 @@ class RegexRules():
             'valor_total_tributo': valor_total_tributo_pattern
         }
 
-        for page_num_extra in range(3, pdf_document.page_count):
-            page_text_extra = pdf_document[page_num_extra].get_text()
+        flags = re.IGNORECASE | re.MULTILINE
+
+        def clean_text(text):
+            """Normaliza o texto para facilitar a extração"""
+            text = re.sub(r'\s+', ' ', text)  
+            text = re.sub(r'(?<=\d)\s+(?=\d)', '', text)  
+            return text
+
+
+        texto_paginas_extras = ""
+        for page_num_extra in range(3, len(pdf_document.pages)):
+            texto_paginas_extras += "\n" + pdf_document.pages[page_num_extra].extract_text()
+
+        texto_paginas_extras = clean_text(texto_paginas_extras)
+        
+        # Separar blocos de débitos corretamente (ex: 001. Débito... até antes do próximo XXX. Débito...)
+        blocos_detalhados = re.findall(r'(?:\d{3}\.\s+Débito.*?)(?=\d{3}\.\s+Débito|\Z)', texto_paginas_extras, re.DOTALL | re.IGNORECASE)
+
+        for bloco in blocos_detalhados:
+            bloco_info = {key: None for key in patterns_pags_extras}
+
             for key, pattern in patterns_pags_extras.items():
-                matches_extra = re.findall(pattern, page_text_extra)
-                if matches_extra:
-                    for match_item in matches_extra:
-                        info[key].append(match_item)
+                match = re.search(pattern, bloco, flags)
+                if match:
+                    value = match.group(1).strip() if isinstance(match, re.Match) or isinstance(match, tuple) else match.strip()
+                    if key == 'codigos_receita':
+                        value = re.sub(r'\s+', ' ', value).replace('- ', '-')
+                    bloco_info[key] = value
+
+            # Armazenar cada campo como parte de uma lista
+            for key in patterns_pags_extras:
+                info[key].append(bloco_info.get(key, None))
+
+
+        
+        #origem_credito_keys = set(origem_credito_pattern.keys())
+        texto_completo = "\n".join(page.extract_text() for page in pdf_document.pages)
+        origem_credito_data = extract_origem_credito(texto_completo)
+
+        darf_data = extract_darf(texto_completo)
+        gps_data = extract_gps(texto_completo)
+
+        for key in darf_pattern:
+            info[key].extend(darf_data.get(key, []))
+
+        for key in gps_pattern:
+            info[key].extend(gps_data.get(key, []))
+
+
+        for key in origem_credito_pattern.keys():
+            info[key].extend(origem_credito_data.get(key, []))
+
+
+        # Campos que devem permanecer como listas (para depois serem explodidos)
+        listas_para_explodir = set()
+        listas_para_explodir.update(origem_credito_pattern.keys())
+        listas_para_explodir.update(darf_pattern.keys())
+        listas_para_explodir.update(gps_pattern.keys())
 
         for key, value in info.items():
             if isinstance(value, list):
-                info[key] = ";".join(value)
-        return info
+                if key in listas_para_explodir:
+                    info[key] = value if value else []
+                else:
+                    info[key] = ";".join([str(v) if v is not None else '' for v in value]) if value else None
+        return info  

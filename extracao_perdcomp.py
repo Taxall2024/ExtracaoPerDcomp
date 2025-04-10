@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-import calendar
+#import calendar
 import streamlit as st
 
 from exportar_dados.gerar_excel import ExportarDados
@@ -59,7 +59,11 @@ def main():
             'data_final_periodo',
             'data_competencia',
             'competencia',
+            'data_arrecadacao', 
             'selic_acumulada',
+            'valor_credito_passivel_restituicao',
+            'valor_original_credito_utilizado_compensacoes_gfip',
+            'valor_disponivel_para_restituicao_apurado_documento_inicial', 
             'imposto_devido', 
             'csll_devida',
             'total_parcelas_composicao_credito',
@@ -100,13 +104,15 @@ def main():
         tabela3_cols =[   
             'cod_perdcomp',
             'periodo_apuracao_origem_credito',
-            'cnpj_origem_credito',
+            'cnpj_pagamento_origem_credito',
             'codigo_receita_origem_credito',
             'grupo_tributo_origem_credito',
+            'data_arrecadacao_origem_credito', 
             'valor_principal_origem_credito',
             'valor_multa_origem_credito', 
             'valor_juros_origem_credito',
-            'valor_total_origem_credito'
+            'valor_total_origem_credito', 
+            'valor_original_credito_origem_credito',
             ]
 
         tabela4_cols = [
@@ -121,18 +127,36 @@ def main():
             'valor_multa_darf',
             'valor_juros_darf',
             'valor_total_darf',
-            'valor_original_credito_darf'
-
+            'valor_original_credito_darf',
         ]
+
+        tabela5_cols = [
+            'cod_perdcomp',
+            'codigo_pagamento_gps',
+            'data_competencia_gps',
+            'periodo_apuracao_gps',
+            'identificador_detentor_credito_gps',
+            'data_arrecadacao_gps',
+            'valor_inss_gps',
+            'valor_outras_entidades_gps',
+            'valor_atm_multa_juros_gps',
+            'valor_total_gps',
+        ]
+
 
         df_tabela1 = df_result[tabela1_cols].copy()
         df_tabela2 = df_result[tabela2_cols].copy()
         df_tabela3 = df_result[tabela3_cols].copy()
         df_tabela4 = df_result[tabela4_cols].copy()
+        df_tabela5 = df_result[tabela5_cols].copy()
 
       # Explodir Tabela2 (múltiplas linhas viram colunas numeradas)
         df_tabela2_explodida = LimpezaETratamentoDados.explodir_tabela2(df_tabela2)
+        df_tabela3 = LimpezaETratamentoDados.explodir_origem_credito(df_tabela3)
+        df_tabela4 = LimpezaETratamentoDados.explodir_darf(df_tabela4)
+        df_tabela5 = LimpezaETratamentoDados.explodir_gps(df_tabela5)
         df_tabela3, df_tabela4 = LimpezaETratamentoDados.limpar_tabelas_3_e_4(df_tabela3, df_tabela4)
+
 
         #Substituir '.' por ',' nas colunas de tributos na Tabela2 explodida
         tributo_cols = ['valor_principal_tributo', 'valor_multa_tributo', 'valor_juros_tributo', 'valor_total_tributo']
@@ -224,7 +248,7 @@ def main():
                 nome_arquivo_excel = f"{nome_cliente}_Export_PERDCOMPs.xlsx"
 
         # Gerar Excel em memória
-        excel_bytes = ExportarDados.gerar_excel_em_memoria( df_tabela1, df_tabela2_explodida, df_tabelona, df_tabela3, df_tabela4)
+        excel_bytes = ExportarDados.gerar_excel_em_memoria( df_tabela1, df_tabela2_explodida, df_tabelona, df_tabela3, df_tabela4, df_tabela5)
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ALTERAR AQUI <<
        # Botão para download
         st.download_button(
