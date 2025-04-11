@@ -143,7 +143,6 @@ def main():
             'valor_total_gps',
         ]
 
-
         df_tabela1 = df_result[tabela1_cols].copy()
         df_tabela2 = df_result[tabela2_cols].copy()
         df_tabela3 = df_result[tabela3_cols].copy()
