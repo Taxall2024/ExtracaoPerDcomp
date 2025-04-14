@@ -59,6 +59,9 @@ def main():
             'data_final_periodo',
             'data_competencia',
             'competencia',
+            'forma_tributacao_lucro',
+            'forma_apuracao',
+            'exercicio',
             'data_arrecadacao', 
             'selic_acumulada',
             'valor_credito_passivel_restituicao',
@@ -142,7 +145,6 @@ def main():
             'valor_atm_multa_juros_gps',
             'valor_total_gps',
         ]
-
 
         df_tabela1 = df_result[tabela1_cols].copy()
         df_tabela2 = df_result[tabela2_cols].copy()

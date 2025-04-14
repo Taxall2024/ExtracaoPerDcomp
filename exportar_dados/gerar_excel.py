@@ -11,7 +11,7 @@ class ExportarDados():
             df_tabelona.to_excel(writer, sheet_name="Tabela Geral", index=False)
             df1.to_excel(writer, sheet_name="Tabela PERDCOMP", index=False)
             df2.to_excel(writer, sheet_name="Tabela Tributos", index=False)
-            df3.to_excel(writer, sheet_name="Tabela Origem Créditos", index=False)
+            df3.to_excel(writer, sheet_name="Tabela Origem Crédito", index=False)
             df4.to_excel(writer, sheet_name="Tabela DARF", index=False) 
             df5.to_excel(writer, sheet_name="Tabela GPS", index=False)
         output.seek(0)
