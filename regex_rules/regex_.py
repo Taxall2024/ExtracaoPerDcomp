@@ -114,6 +114,9 @@ class RegexRules():
             'valor_original_credito_utilizado_compensacoes_gfip': None,
             'valor_original_credito_disponivel': None,
             'imposto_devido': None,
+            'forma_tributacao_lucro': None,
+            'forma_apuracao': None,
+            'exercicio': None,
             'valor_credito_passivel_restituicao': None,
             'grupo_tributo': [],
             'debito_sucedida': [],
@@ -316,7 +319,7 @@ class RegexRules():
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
                 'data_arrecadacao': r'Data de Arrecadação\s*([\d/]+)', 
                 'valor_credito_original_data_entrega': r'(?:Crédito Original na Data (?:de|da) Entrega|Crédito Original na Data da Entrega)[\s:]*([\d]{1,3}(?:\.?\d{3})*(?:,\d{2}))',
-                'total_parcelas_composicao_credito': r'(?:(?<=Total das Parcelas de Composição do Crédito\s)[\d.,]+|[\d.,]+(?=\s*Total das Parcelas de Composição do Crédito))',
+               'total_parcelas_composicao_credito': r'Total das Parcelas de Composição do Crédito\s+([\d.,]+)',
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
                 'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
@@ -328,6 +331,10 @@ class RegexRules():
                 'valor_disponivel_para_restituicao_apurado_documento_inicial': r'(?i)Valor\s+Disponível\s+para\s+Restituição\s+Apurado\s+no.*?(\d{1,3}(?:\.\d{3})*,\d{2}).*?Documento\s+Inicial',
                 'valor_original_credito_utilizado_compensacoes_gfip': r'(?i)Valor\s+Original\s+do\s+Crédito\s+Utilizado\s+em.*?(\d{1,3}(?:\.\d{3})*,\d{2}).*?Compensações\s+em\s+GFIP',
                 'valor_credito_passivel_restituicao': r"Crédito Passível de Restituição\s*([\d.,]+)",
+                'forma_tributacao_lucro': r'Forma de Tributação do Lucro\s+(.*)',
+                'forma_apuracao': r'Forma de Apuração\s+(.*)',
+                'exercicio': r'Exercício\s+(\d{4})',
+
                 
             },
         }
