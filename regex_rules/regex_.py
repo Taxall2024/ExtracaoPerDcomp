@@ -325,7 +325,7 @@ class RegexRules():
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
                 'data_arrecadacao': r'Data de Arrecadação\s*([\d/]+)', 
                 'valor_credito_original_data_entrega': r'(?:Crédito Original na Data (?:de|da) Entrega|Crédito Original na Data da Entrega)[\s:]*([\d]{1,3}(?:\.?\d{3})*(?:,\d{2}))',
-               'total_parcelas_composicao_credito': r'Total das Parcelas de Composição do Crédito\s+([\d.,]+)',
+                'total_parcelas_composicao_credito': r'Total das Parcelas de Composição do Crédito\s+([\d.,]+)',
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
                 'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
