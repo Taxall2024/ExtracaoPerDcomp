@@ -242,6 +242,10 @@ def main():
 
         st.subheader("Tabela 4 - Dados DARF Pagos")
         st.dataframe(df_tabela4)
+
+        st.subheader("Tabela 5 - Dados GPS Pagos")
+        st.dataframe(df_tabela5)
+
         nome_arquivo_excel = "extract_pdf_result.xlsx"
         if not df_tabela1.empty:
             nome_cliente = df_tabela1.iloc[0].get("nome_cliente", "")

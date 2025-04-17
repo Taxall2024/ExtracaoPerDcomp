@@ -172,8 +172,8 @@ class RegexRules():
         }
 
         origem_credito_pattern = {
-            'periodo_apuracao_origem_credito': r'(?i)Período\s+de\s+Apuração[\s:]*(\d{2}/\d{2}/\d{4})',
-            'cnpj_pagamento_origem_credito': r'(?i)CNPJ\s+do\s+Pagamento[\s:]*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+            'periodo_apuracao_origem_credito': r'(?i)Período\s+de\s+Apuração[\s:\n\r]*([\d]{2}/[\d]{2}/[\d]{4})',
+            'cnpj_pagamento_origem_credito': r'(?i)CNPJ\s+do\s+Pagamento[\s:\n\r]*([\d]{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
             'codigo_receita_origem_credito': r'(?i)Código\s+da\s+Receita[\s:-]*(\d{4}(?:-\d{2})?)',  # Aceita códigos com ou sem "-XX"
             'grupo_tributo_origem_credito': r'(?i)Grupo\s+de\s+Tributo[\s:]+([A-Za-zÀ-ú\s\-–]+?)(?=\s*(?:Código|Valor|Data|$))',
             'data_arrecadacao_origem_credito': r'(?i)Data\s+de\s+Arrecadação[\s:]*(\d{2}/\d{2}/\d{4})',
@@ -199,7 +199,7 @@ class RegexRules():
 }
 
         gps_pattern = {
-        'codigo_pagamento_gps': r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
+        'codigo_pagamento_gps': r'(?i)Código\s+do\s+Pagamento\s+(\d{4})',
         'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
         'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
         'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)",
@@ -226,10 +226,11 @@ class RegexRules():
 
                 # Cada ocorrência de crédito dentro do bloco
                 sub_blocos = re.findall(
-                    r'(Código da Receita.*?Período de Apuração.*?)(?=(?:Código da Receita|ORIGEM DO CRÉDITO|Valor Total dos Componentes|Débito|$))',
+                    r'(?:\d+\.)?\s*Período\s+de\s+Apuração.*?Valor\s+Total\s+[\d.,]+',
                     bloco,
                     flags=re.IGNORECASE | re.DOTALL
                 )
+
 
                 for sub in sub_blocos:
                     temp = {}
@@ -269,21 +270,26 @@ class RegexRules():
 
         def extract_gps(text):
             resultados = {key: [] for key in gps_pattern}
-            blocos = re.split(r'(?=Código\s+do\s+Pagamento)', text, flags=re.IGNORECASE)
+
+            # Encontrar todos os blocos que começam com "0001.", "0002.", ..., até o próximo "000X." ou final do texto
+            blocos = re.findall(
+                r'\d{4}\.\s+Código\s+do\s+Pagamento.*?(?=\n\d{4}\.\s+Código\s+do\s+Pagamento|\Z)',
+                text,
+                flags=re.IGNORECASE | re.DOTALL
+            )
 
             for bloco in blocos:
-                if not re.search(r"Competência", bloco):
-                    continue
                 temp = {}
                 for campo, pattern in gps_pattern.items():
                     match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
                     temp[campo] = match.group(1).strip() if match else None
-                if temp['codigo_pagamento_gps']:
+
+                # Somente adiciona se tiver um código de pagamento
+                if temp.get('codigo_pagamento_gps'):
                     for k in resultados:
                         resultados[k].append(temp[k])
+
             return resultados
-
-
 
         page_patterns = {
             0: {
@@ -319,7 +325,7 @@ class RegexRules():
                 'competencia': r"Competência\s+((?:Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro)\s*(?:\/|de)\s*\d{4})\s*",
                 'data_arrecadacao': r'Data de Arrecadação\s*([\d/]+)', 
                 'valor_credito_original_data_entrega': r'(?:Crédito Original na Data (?:de|da) Entrega|Crédito Original na Data da Entrega)[\s:]*([\d]{1,3}(?:\.?\d{3})*(?:,\d{2}))',
-               'total_parcelas_composicao_credito': r'Total das Parcelas de Composição do Crédito\s+([\d.,]+)',
+                'total_parcelas_composicao_credito': r'Total das Parcelas de Composição do Crédito\s+([\d.,]+)',
                 'valor_original_credito_inicial': r"Valor Original do Crédito Inicial\s*([\d.,]+)",
                 'imposto_devido': r"Imposto Devido\s*([\d.,]+)",
                 'valor_pedido_restituicao': r"Valor do Pedido de Restituição\s*([\d.,]+)", 
