@@ -199,7 +199,7 @@ class RegexRules():
 }
 
         gps_pattern = {
-        'codigo_pagamento_gps': r'(?i)Código\s+do\s+Pagamento\s+(.*?)(?=\s*Competência)',
+        'codigo_pagamento_gps': r'(?i)Código\s+do\s+Pagamento\s+(\d{4})',
         'data_competencia_gps': r'(?i)Competência\s+([A-Za-zç]+\s+de\s+\d{4})',
         'identificador_detentor_credito_gps': r'(?i)Identificador\s+do\s+Detentor\s+do\s+Crédito\s+(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
         'periodo_apuracao_gps': r"Período de Apuração\s*([\d/]+)",
@@ -271,9 +271,9 @@ class RegexRules():
         def extract_gps(text):
             resultados = {key: [] for key in gps_pattern}
 
-            # Ajuste: usar regex para capturar blocos que comecem com "GPS" seguido de número e conteúdo até o próximo "GPS" ou fim
+            # Encontrar todos os blocos que começam com "0001.", "0002.", ..., até o próximo "000X." ou final do texto
             blocos = re.findall(
-                r'GPS\s*\n?\s*\d{4}\.\s*Código do Pagamento.*?(?=(?:\nGPS\s*\n|\Z))',
+                r'\d{4}\.\s+Código\s+do\s+Pagamento.*?(?=\n\d{4}\.\s+Código\s+do\s+Pagamento|\Z)',
                 text,
                 flags=re.IGNORECASE | re.DOTALL
             )
@@ -284,13 +284,12 @@ class RegexRules():
                     match = re.search(pattern, bloco, flags=re.IGNORECASE | re.MULTILINE)
                     temp[campo] = match.group(1).strip() if match else None
 
-                # Valida se o bloco trouxe um código de pagamento
+                # Somente adiciona se tiver um código de pagamento
                 if temp.get('codigo_pagamento_gps'):
                     for k in resultados:
                         resultados[k].append(temp[k])
-            
-            return resultados
 
+            return resultados
 
         page_patterns = {
             0: {
